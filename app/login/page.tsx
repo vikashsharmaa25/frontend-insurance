@@ -99,6 +99,7 @@ export default function LoginPage() {
       toast.success("Login successful! Welcome.");
     } catch (err: any) {
       const message =
+        err.message ||                        // role-denied or plain Error
         err.response?.data?.message ||
         err.response?.data?.error ||
         "Invalid or expired OTP. Please try again.";

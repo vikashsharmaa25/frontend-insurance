@@ -14,8 +14,13 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
+    if (!loading) {
+      if (!user) {
+        router.push("/login");
+      } else if (user.role?.toUpperCase() !== "ADMIN") {
+        // Non-admin user somehow reached here — kick them out
+        router.push("/login");
+      }
     }
   }, [user, loading, router]);
 

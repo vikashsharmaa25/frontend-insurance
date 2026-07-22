@@ -27,9 +27,9 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   sendOtp: async () => ({ demoOtp: "" }),
-  verifyOtp: async () => {},
-  logout: async () => {},
-  refreshUser: async () => {},
+  verifyOtp: async () => { },
+  logout: async () => { },
+  refreshUser: async () => { },
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -101,7 +101,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(true);
       const res = await getMeApi();
       const userData = res.data?.data || res.data;
-      if (userData && (userData.role === "ADMIN" || userData.role === "admin" || userData._id)) {
+      const role = userData?.role?.toUpperCase();
+      if (userData && role === "ADMIN") {
         setUser(userData);
         if (typeof window !== "undefined") {
           localStorage.setItem("admin_user", JSON.stringify(userData));
@@ -132,7 +133,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return { demoOtp };
   };
 
-  /** Step 2: Verify OTP and receive tokens → login user */
+  /** Step 2: Verify OTP and receive tokens → login user (ADMIN only) */
   const verifyOtp = async (phone: string, otp: string): Promise<void> => {
     const res = await verifyOtpApi(phone, otp);
     const data = res.data?.data || res.data;
@@ -144,6 +145,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       phone,
       role: "ADMIN",
     };
+
+    // ── Role Guard: Only ADMIN users can access this portal ──────────────────
+    const role = userData.role?.toUpperCase();
+    if (role !== "ADMIN") {
+      // Do NOT persist session — throw error for login page to display
+      throw new Error(
+        "Access denied. This portal is restricted to Admin users only. Please contact your administrator."
+      );
+    }
 
     const accessToken: string =
       data?.accessToken || res.data?.accessToken || "icici_admin_session_token";
