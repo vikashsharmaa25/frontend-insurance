@@ -2,21 +2,23 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getMeApi, loginApi, logoutApi } from "@/lib/apiService";
+import { getMeApi, sendOtpApi, verifyOtpApi, logoutApi } from "@/lib/apiService";
 
 export interface AdminUser {
   _id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
+  name: string;
+  email?: string;
   role: string;
-  phone?: string;
+  phone: string;
 }
 
 interface AuthContextType {
   user: AdminUser | null;
   loading: boolean;
-  login: (email: string, pass: string) => Promise<void>;
+  /** Step 1: Send OTP to mobile — returns dummy OTP for demo */
+  sendOtp: (phone: string) => Promise<{ demoOtp: string }>;
+  /** Step 2: Verify OTP and complete login */
+  verifyOtp: (phone: string, otp: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -24,7 +26,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
-  login: async () => {},
+  sendOtp: async () => ({ demoOtp: "" }),
+  verifyOtp: async () => {},
   logout: async () => {},
   refreshUser: async () => {},
 });
@@ -34,9 +37,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
 
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
   const setAuthCookie = (token: string) => {
     if (typeof window !== "undefined") {
       document.cookie = `accessToken=${token}; path=/; max-age=86400; SameSite=Lax`;
+    }
+  };
+
+  const setRefreshCookie = (token: string) => {
+    if (typeof window !== "undefined") {
+      document.cookie = `refreshToken=${token}; path=/; max-age=604800; SameSite=Lax`;
+    }
+  };
+
+  const persistSession = (userData: AdminUser, accessToken: string, refreshToken?: string) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("admin_user", JSON.stringify(userData));
+      localStorage.setItem("accessToken", accessToken);
+      setAuthCookie(accessToken);
+      if (refreshToken) {
+        localStorage.setItem("refreshToken", refreshToken);
+        setRefreshCookie(refreshToken);
+      }
+    }
+  };
+
+  const clearSession = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("admin_user");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("token");
+      document.cookie = "accessToken=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      document.cookie = "refreshToken=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      document.cookie = "token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     }
   };
 
@@ -47,17 +82,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         try {
           const parsedUser = JSON.parse(stored);
           setUser(parsedUser);
-          const existingToken = localStorage.getItem("accessToken") || "icici_admin_session_token";
-          setAuthCookie(existingToken);
+          const existingToken = localStorage.getItem("accessToken");
+          if (existingToken) setAuthCookie(existingToken);
           return true;
         } catch {
-          // Ignore
+          // ignore
         }
       }
     }
     setUser(null);
     return false;
   };
+
+  // ── Session restore on mount ───────────────────────────────────────────────
 
   const fetchCurrentUser = async () => {
     try {
@@ -68,8 +105,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(userData);
         if (typeof window !== "undefined") {
           localStorage.setItem("admin_user", JSON.stringify(userData));
-          const existingToken = localStorage.getItem("accessToken") || "icici_admin_session_token";
-          setAuthCookie(existingToken);
+          const existingToken = localStorage.getItem("accessToken");
+          if (existingToken) setAuthCookie(existingToken);
         }
       } else {
         checkLocalFallback();
@@ -85,39 +122,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     fetchCurrentUser();
   }, []);
 
-  const login = async (email: string, password: string) => {
-    const res = await loginApi(email, password);
+  // ── Auth actions ───────────────────────────────────────────────────────────
+
+  /** Step 1: Request OTP for phone number. Returns the dummy OTP for demo display. */
+  const sendOtp = async (phone: string): Promise<{ demoOtp: string }> => {
+    const res = await sendOtpApi(phone);
     const data = res.data?.data || res.data;
-    const userData = data?.user || data || {
-      _id: "60c72b2f9b1d8b2e88a12345",
-      firstName: "Super",
-      lastName: "Admin",
-      email: email || "admin@example.com",
+    const demoOtp: string = data?.demoOtp || data?.otp || "";
+    return { demoOtp };
+  };
+
+  /** Step 2: Verify OTP and receive tokens → login user */
+  const verifyOtp = async (phone: string, otp: string): Promise<void> => {
+    const res = await verifyOtpApi(phone, otp);
+    const data = res.data?.data || res.data;
+
+    const userData: AdminUser = data?.user || {
+      _id: "demo-id",
+      name: "Admin User",
+      email: "",
+      phone,
       role: "ADMIN",
     };
 
-    // Extract token if present in login response payload
-    const token =
-      data?.accessToken ||
-      res.data?.accessToken ||
-      data?.token ||
-      res.data?.token ||
-      "icici_admin_session_token";
+    const accessToken: string =
+      data?.accessToken || res.data?.accessToken || "icici_admin_session_token";
+    const refreshToken: string | undefined =
+      data?.refreshToken || res.data?.refreshToken;
 
-    const refreshToken =
-      data?.refreshToken ||
-      res.data?.refreshToken;
-
-    if (typeof window !== "undefined") {
-      localStorage.setItem("accessToken", token);
-      setAuthCookie(token);
-      if (refreshToken) {
-        localStorage.setItem("refreshToken", refreshToken);
-        document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Lax`;
-      }
-      localStorage.setItem("admin_user", JSON.stringify(userData));
-    }
-
+    persistSession(userData, accessToken, refreshToken);
     setUser(userData);
     router.push("/admin/dashboard");
   };
@@ -129,15 +162,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.error("Logout error:", err);
     } finally {
       setUser(null);
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("admin_user");
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        localStorage.removeItem("token");
-        document.cookie = "accessToken=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-        document.cookie = "refreshToken=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-        document.cookie = "token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-      }
+      clearSession();
       router.push("/login");
     }
   };
@@ -147,7 +172,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, sendOtp, verifyOtp, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

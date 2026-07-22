@@ -3,8 +3,20 @@ import api, { API_BASE_URL } from "./axios";
 // ----------------------------------------------------
 // 🔐 1. Authentication & Session Management
 // ----------------------------------------------------
-export const loginApi = (email: string, pass: string) => {
-  return api.post("/api/auth/login", { email, password: pass });
+
+/** Register: name + email + phone (no password) */
+export const registerApi = (data: { name: string; email: string; phone: string }) => {
+  return api.post("/api/auth/register", data);
+};
+
+/** Step 1 of login: send OTP to mobile */
+export const sendOtpApi = (phone: string) => {
+  return api.post("/api/auth/send-otp", { phone });
+};
+
+/** Step 2 of login: verify OTP and receive tokens */
+export const verifyOtpApi = (phone: string, otp: string) => {
+  return api.post("/api/auth/verify-otp", { phone, otp });
 };
 
 export const getMeApi = () => {

@@ -45,9 +45,8 @@ export function AdminHeader({
       .slice(0, 2);
   };
 
-  const fullName = user
-    ? `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.email
-    : "Admin User";
+  const fullName = user?.name || user?.email || "Admin User";
+
 
   return (
     <header className="sticky top-0 z-30 h-16 shrink-0 w-full border-b border-slate-200 bg-white/90 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between shadow-2xs">
@@ -115,7 +114,7 @@ export function AdminHeader({
               </Badge>
             </div>
             <span className="text-[11px] text-slate-500 truncate max-w-37.5">
-              {user?.email || "admin@example.com"}
+              {user?.email || user?.phone || "admin@icici.com"}
             </span>
           </div>
 
