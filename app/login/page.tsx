@@ -182,7 +182,7 @@ export default function LoginPage() {
           </form>
 
           {/* Quick Demo Fill button */}
-          <div className="mt-6 pt-5 border-t border-slate-100 text-center">
+          {/* <div className="mt-6 pt-5 border-t border-slate-100 text-center">
             <button
               type="button"
               onClick={fillDemoCreds}
@@ -190,7 +190,7 @@ export default function LoginPage() {
             >
               Click here to auto-fill default admin credentials
             </button>
-          </div>
+          </div> */}
         </div>
 
         {/* Footer info */}
