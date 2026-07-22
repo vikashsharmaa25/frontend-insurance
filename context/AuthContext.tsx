@@ -104,9 +104,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       res.data?.token ||
       "icici_admin_session_token";
 
+    const refreshToken =
+      data?.refreshToken ||
+      res.data?.refreshToken;
+
     if (typeof window !== "undefined") {
       localStorage.setItem("accessToken", token);
       setAuthCookie(token);
+      if (refreshToken) {
+        localStorage.setItem("refreshToken", refreshToken);
+        document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Lax`;
+      }
       localStorage.setItem("admin_user", JSON.stringify(userData));
     }
 
@@ -124,8 +132,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (typeof window !== "undefined") {
         localStorage.removeItem("admin_user");
         localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
         localStorage.removeItem("token");
         document.cookie = "accessToken=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        document.cookie = "refreshToken=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT";
         document.cookie = "token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT";
       }
       router.push("/login");

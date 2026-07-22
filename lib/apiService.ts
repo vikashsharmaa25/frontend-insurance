@@ -15,6 +15,10 @@ export const logoutApi = () => {
   return api.post("/api/auth/logout");
 };
 
+export const refreshTokenApi = (refreshToken?: string) => {
+  return api.post("/api/auth/refresh-token", { refreshToken });
+};
+
 // ----------------------------------------------------
 // 📦 2. Insurance Plans Master Module
 // ----------------------------------------------------
