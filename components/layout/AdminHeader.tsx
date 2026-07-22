@@ -76,23 +76,23 @@ export function AdminHeader({
       {/* Right Controls & Profile */}
       <div className="flex items-center gap-3 sm:gap-4">
         {/* Search Mock input */}
-        <div className="relative hidden md:block w-56">
+        {/* <div className="relative hidden md:block w-56">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 z-10" />
           <Input
             type="text"
             placeholder="Quick search..."
             className="w-full h-9 pl-9 pr-3 text-xs bg-slate-100 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus-visible:ring-orange-500"
           />
-        </div>
+        </div> */}
 
         {/* Notifications */}
-        <button
+        {/* <button
           type="button"
           className="relative p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition"
         >
           <Bell className="w-4 h-4" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-        </button>
+        </button> */}
 
         <div className="h-6 w-px bg-slate-200" />
 
