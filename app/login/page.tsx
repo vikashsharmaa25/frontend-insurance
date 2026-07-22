@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import {
@@ -16,12 +17,33 @@ import {
 import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, user, loading } = useAuth();
+  const router = useRouter();
   const [email, setEmail] = useState("admin@example.com");
   const [password, setPassword] = useState("AdminPassword123");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace("/admin/dashboard");
+    }
+  }, [user, loading, router]);
+
+  if (loading || user) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center text-slate-900 font-sans">
+        <div className="relative flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full border-4 border-orange-500/20 border-t-orange-600 animate-spin" />
+          <Loader2 className="w-6 h-6 text-orange-600 absolute animate-pulse" />
+        </div>
+        <p className="mt-4 text-xs font-semibold text-slate-500 tracking-wider uppercase">
+          Verifying Session...
+        </p>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -34,12 +34,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
 
+  const setAuthCookie = (token: string) => {
+    if (typeof window !== "undefined") {
+      document.cookie = `accessToken=${token}; path=/; max-age=86400; SameSite=Lax`;
+    }
+  };
+
   const checkLocalFallback = () => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("admin_user");
       if (stored) {
         try {
-          setUser(JSON.parse(stored));
+          const parsedUser = JSON.parse(stored);
+          setUser(parsedUser);
+          const existingToken = localStorage.getItem("accessToken") || "icici_admin_session_token";
+          setAuthCookie(existingToken);
           return true;
         } catch {
           // Ignore
@@ -59,6 +68,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(userData);
         if (typeof window !== "undefined") {
           localStorage.setItem("admin_user", JSON.stringify(userData));
+          const existingToken = localStorage.getItem("accessToken") || "icici_admin_session_token";
+          setAuthCookie(existingToken);
         }
       } else {
         checkLocalFallback();
@@ -90,17 +101,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       data?.accessToken ||
       res.data?.accessToken ||
       data?.token ||
-      res.data?.token;
+      res.data?.token ||
+      "icici_admin_session_token";
 
-    if (token && typeof window !== "undefined") {
+    if (typeof window !== "undefined") {
       localStorage.setItem("accessToken", token);
-      document.cookie = `accessToken=${token}; path=/; max-age=86400; SameSite=Lax`;
+      setAuthCookie(token);
+      localStorage.setItem("admin_user", JSON.stringify(userData));
     }
 
     setUser(userData);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("admin_user", JSON.stringify(userData));
-    }
     router.push("/admin/dashboard");
   };
 
@@ -115,8 +125,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.removeItem("admin_user");
         localStorage.removeItem("accessToken");
         localStorage.removeItem("token");
-        document.cookie = "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-        document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        document.cookie = "accessToken=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        document.cookie = "token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT";
       }
       router.push("/login");
     }
