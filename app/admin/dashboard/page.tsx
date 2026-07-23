@@ -104,7 +104,7 @@ export default function DashboardPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 rounded-2xl bg-linear-to-r from-orange-600 via-amber-600 to-orange-500 text-white shadow-xl shadow-orange-600/10 relative overflow-hidden">
           <div className="space-y-1 relative z-10">
             <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight flex items-center gap-2">
-              ICICI Executive Dashboard
+              Insurance Executive Dashboard
               <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/20 text-white font-mono font-bold">
                 REALTIME API
               </span>

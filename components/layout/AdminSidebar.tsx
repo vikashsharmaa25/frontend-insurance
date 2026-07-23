@@ -97,7 +97,7 @@ export function AdminSidebar({
             </div>
             <div className="flex flex-col whitespace-nowrap">
               <span className="font-extrabold text-slate-900 text-base tracking-tight flex items-center gap-1.5">
-                ICICI <span className="text-orange-600">Portal</span>
+                Insurance <span className="text-orange-600">Portal</span>
                 <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
               </span>
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">

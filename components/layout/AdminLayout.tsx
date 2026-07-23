@@ -32,7 +32,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           <Loader2 className="w-6 h-6 text-orange-600 absolute animate-pulse" />
         </div>
         <p className="mt-4 text-xs font-semibold text-slate-500 tracking-wider uppercase">
-          Verifying ICICI Admin Credentials...
+          Verifying Insurance Admin Credentials...
         </p>
       </div>
     );

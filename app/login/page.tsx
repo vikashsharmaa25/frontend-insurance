@@ -173,7 +173,7 @@ export default function LoginPage() {
             </div>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center justify-center gap-2">
-            ICICI Admin Portal
+            Insurance Admin Portal
             <Sparkles className="w-5 h-5 text-amber-500" />
           </h1>
           <p className="mt-2 text-xs sm:text-sm text-slate-500">
@@ -230,7 +230,7 @@ export default function LoginPage() {
                   />
                 </div>
                 <p className="text-[11px] text-slate-400">
-                  Enter your 10-digit mobile number registered with ICICI Admin
+                  Enter your 10-digit mobile number registered with Insurance Admin
                 </p>
               </div>
 
@@ -338,7 +338,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <p className="text-center text-[11px] text-slate-500 mt-6 font-medium">
-          &copy; 2026 ICICI Insurance Management System • Secure Admin Portal
+          &copy; 2026 Insurance Management System • Secure Admin Portal
         </p>
       </div>
     </div>

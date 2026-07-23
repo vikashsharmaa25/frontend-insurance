@@ -506,7 +506,7 @@ export default function MasterDataPage() {
               {editingItem ? "Edit" : "Add"} {activeTab.replace("-", " ").toUpperCase()} Item
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-500">
-              {editingItem ? "Update existing" : "Create a new"} master data entry for ICICI insurance system configuration.
+              {editingItem ? "Update existing" : "Create a new"} master data entry for insurance system configuration.
             </DialogDescription>
           </DialogHeader>
 

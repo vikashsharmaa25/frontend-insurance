@@ -63,7 +63,7 @@ export function AdminHeader({
         {/* Page Title & Breadcrumbs */}
         <div className="flex flex-col">
           <div className="flex items-center gap-2 text-xs text-slate-500">
-            <span>ICICI Admin</span>
+            <span>Insurance Admin</span>
             <ChevronRight className="w-3 h-3 text-slate-400" />
             <span className="text-orange-600 font-semibold">{title}</span>
           </div>
@@ -114,7 +114,7 @@ export function AdminHeader({
               </Badge>
             </div>
             <span className="text-[11px] text-slate-500 truncate max-w-37.5">
-              {user?.email || user?.phone || "admin@icici.com"}
+              {user?.email || user?.phone || "admin@insurance.com"}
             </span>
           </div>
 

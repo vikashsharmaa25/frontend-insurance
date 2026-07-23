@@ -156,7 +156,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     const accessToken: string =
-      data?.accessToken || res.data?.accessToken || "icici_admin_session_token";
+      data?.accessToken || res.data?.accessToken || "insurance_admin_session_token";
     const refreshToken: string | undefined =
       data?.refreshToken || res.data?.refreshToken;
 

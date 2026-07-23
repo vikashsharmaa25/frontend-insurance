@@ -159,7 +159,7 @@ export default function RateCardsPage() {
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "ICICI_Health_Insurance_Rate_Card_Template.xlsx");
+      link.setAttribute("download", "Health_Insurance_Rate_Card_Template.xlsx");
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -318,7 +318,7 @@ export default function RateCardsPage() {
                   return (
                     <TableRow key={r._id} className="hover:bg-slate-50 transition">
                       <TableCell className="px-6 py-4 font-bold text-slate-900">
-                        {r.planId?.name || "ICICI Health Shield"}
+                        {r.planId?.name || "Health Shield"}
                       </TableCell>
                       <TableCell className="px-6 py-4 text-xs font-semibold text-slate-700">
                         {r.ageSlabId?.displayName || `${r.ageSlabId?.minAge}-${r.ageSlabId?.maxAge} yrs`}

@@ -189,7 +189,7 @@ export default function PlansPage() {
               Insurance Plans Master <Sparkles className="w-4 h-4 text-orange-600" />
             </h2>
             <p className="text-xs text-slate-500">
-              Create, configure, and manage core ICICI insurance policy products.
+              Create, configure, and manage core insurance policy products.
             </p>
           </div>
           <Button
@@ -290,8 +290,8 @@ export default function PlansPage() {
                         type="button"
                         onClick={() => handleToggleStatus(plan)}
                         className={`px-3 py-1 text-xs font-bold rounded-full border transition flex items-center gap-1.5 ${plan.status === "active"
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
-                            : "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                          : "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200"
                           }`}
                       >
                         {plan.status === "active" ? (
@@ -400,7 +400,7 @@ export default function PlansPage() {
               <Input
                 type="text"
                 required
-                placeholder="e.g. ICICI Pru Health Shield"
+                placeholder="e.g. Health Shield"
                 value={planForm.name}
                 onChange={(e) => setPlanForm({ ...planForm, name: e.target.value })}
                 className="bg-slate-50 border-slate-200 text-slate-900 text-xs focus-visible:ring-orange-500 font-medium"
@@ -414,7 +414,7 @@ export default function PlansPage() {
               <Input
                 type="text"
                 required
-                placeholder="icici-pru-health-shield"
+                placeholder="health-shield"
                 value={planForm.slug}
                 onChange={(e) => setPlanForm({ ...planForm, slug: e.target.value })}
                 className="bg-slate-50 border-slate-200 text-slate-900 text-xs font-mono focus-visible:ring-orange-500"

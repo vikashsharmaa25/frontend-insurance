@@ -10,8 +10,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Admin Portal - ICICI Insurance Management",
-  description: "ICICI Insurance Admin Portal & Policy Management System",
+  title: "Insurance Portal - Admin Management",
+  description: "Insurance Admin Portal & Policy Management System",
 };
 
 export default function RootLayout({
