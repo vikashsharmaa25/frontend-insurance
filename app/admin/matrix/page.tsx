@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import {
   getPlansApi,
@@ -8,6 +9,7 @@ import {
   getCoveragesApi,
   getPlanOptionCoveragesApi,
   savePlanOptionCoverageApi,
+  savePlanOptionCoverageBatchApi,
 } from "@/lib/apiService";
 import { toast } from "sonner";
 import {
@@ -57,6 +59,9 @@ interface MatrixItem {
 }
 
 export default function CoverageMatrixPage() {
+  const searchParams = useSearchParams();
+  const paramPlanId = searchParams.get("planId");
+
   const [plans, setPlans] = useState<Plan[]>([]);
   const [options, setOptions] = useState<Option[]>([]);
   const [coverages, setCoverages] = useState<CoverageItem[]>([]);
@@ -87,7 +92,9 @@ export default function CoverageMatrixPage() {
         setPlans(planList);
         setCoverages(covList);
 
-        if (planList.length > 0) {
+        if (paramPlanId && planList.some((p: Plan) => p._id === paramPlanId)) {
+          setSelectedPlanId(paramPlanId);
+        } else if (planList.length > 0) {
           setSelectedPlanId(planList[0]._id);
         }
       } catch (err) {
@@ -217,28 +224,30 @@ export default function CoverageMatrixPage() {
 
   const handleSaveAll = async () => {
     if (!selectedPlanId || !selectedOptionId) {
-      toast.error("Please select a Plan and Option");
+      toast.error("Please select a Plan and Option first");
       return;
     }
 
     try {
       setSavingAll(true);
-      const promises = coverages.map((cov) => {
-        const state = matrixState[cov._id] || { isCovered: false, value: "No" };
-        return savePlanOptionCoverageApi({
-          planId: selectedPlanId,
-          optionId: selectedOptionId,
-          coverageId: cov._id,
-          isCovered: state.isCovered,
-          value: state.value,
-        });
-      });
+      const payload = {
+        planId: selectedPlanId,
+        optionId: selectedOptionId,
+        coverages: coverages.map((cov) => {
+          const state = matrixState[cov._id] || { isCovered: false, value: "No" };
+          return {
+            coverageId: cov._id,
+            isCovered: state.isCovered,
+            value: state.value,
+          };
+        }),
+      };
 
-      await Promise.all(promises);
-      toast.success("All coverage mappings updated successfully!");
+      await savePlanOptionCoverageBatchApi(payload);
+      toast.success("All coverages saved successfully!");
     } catch (err: any) {
       console.error("Save all matrix error:", err);
-      toast.error("Failed to save matrix batch");
+      toast.error(err.response?.data?.message || "Failed to save matrix changes");
     } finally {
       setSavingAll(false);
     }
@@ -329,102 +338,106 @@ export default function CoverageMatrixPage() {
             </p>
           </div>
         ) : (
-          <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs">
-            <Table>
-              <TableHeader className="bg-slate-50">
-                <TableRow className="border-b border-slate-200">
-                  <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Is Covered</TableHead>
-                  <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Coverage Item</TableHead>
-                  <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Value / Limit Details</TableHead>
-                  <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Row Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-slate-100">
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="px-6 py-12 text-center text-slate-400">
-                      <Loader2 className="w-6 h-6 animate-spin mx-auto text-orange-600 mb-2" />
-                      Loading matrix configuration...
-                    </TableCell>
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs">
+              <Table>
+                <TableHeader className="bg-slate-50">
+                  <TableRow className="border-b border-slate-200">
+                    <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-36">Is Covered</TableHead>
+                    <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Coverage Item</TableHead>
+                    <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Value / Limit Details</TableHead>
                   </TableRow>
-                ) : coverages.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="px-6 py-12 text-center text-slate-400 text-sm">
-                      No coverage items created in Master Data yet.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  coverages.map((cov) => {
-                    const state = matrixState[cov._id] || { isCovered: false, value: "No" };
-                    const isSavingThis = savingId === cov._id;
+                </TableHeader>
+                <TableBody className="divide-y divide-slate-100">
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={3} className="px-6 py-12 text-center text-slate-400">
+                        <Loader2 className="w-6 h-6 animate-spin mx-auto text-orange-600 mb-2" />
+                        Loading matrix configuration...
+                      </TableCell>
+                    </TableRow>
+                  ) : coverages.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={3} className="px-6 py-12 text-center text-slate-400 text-sm">
+                        No coverage items created in Master Data yet.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    coverages.map((cov) => {
+                      const state = matrixState[cov._id] || { isCovered: false, value: "No" };
 
-                    return (
-                      <TableRow key={cov._id} className="hover:bg-slate-50 transition">
-                        <TableCell className="px-6 py-4">
-                          <button
-                            type="button"
-                            onClick={() => handleToggleCovered(cov._id)}
-                            className={`p-1.5 rounded-lg border transition flex items-center gap-2 ${
-                              state.isCovered
-                                ? "bg-emerald-50 text-emerald-700 border-emerald-300 font-bold"
-                                : "bg-slate-50 text-slate-400 border-slate-200 hover:border-slate-300"
-                            }`}
-                          >
-                            {state.isCovered ? (
-                              <>
-                                <CheckSquare className="w-5 h-5 text-emerald-600" />
-                                <span className="text-xs font-bold text-emerald-700">Yes</span>
-                              </>
-                            ) : (
-                              <>
-                                <Square className="w-5 h-5 text-slate-400" />
-                                <span className="text-xs font-medium text-slate-500">No</span>
-                              </>
-                            )}
-                          </button>
-                        </TableCell>
+                      return (
+                        <TableRow key={cov._id} className="hover:bg-slate-50 transition">
+                          <TableCell className="px-6 py-4">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleCovered(cov._id)}
+                              className={`p-1.5 px-3 rounded-lg border transition flex items-center gap-2 ${
+                                state.isCovered
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-300 font-bold"
+                                  : "bg-slate-50 text-slate-400 border-slate-200 hover:border-slate-300"
+                              }`}
+                            >
+                              {state.isCovered ? (
+                                <>
+                                  <CheckSquare className="w-5 h-5 text-emerald-600" />
+                                  <span className="text-xs font-bold text-emerald-700">Yes</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Square className="w-5 h-5 text-slate-400" />
+                                  <span className="text-xs font-medium text-slate-500">No</span>
+                                </>
+                              )}
+                            </button>
+                          </TableCell>
 
-                        <TableCell className="px-6 py-4">
-                          <div className="font-bold text-slate-900 flex items-center gap-2">
-                            <ShieldCheck className="w-4 h-4 text-orange-600" />
-                            {cov.title}
-                          </div>
-                          <div className="text-xs text-slate-500">{cov.description}</div>
-                        </TableCell>
+                          <TableCell className="px-6 py-4">
+                            <div className="font-bold text-slate-900 flex items-center gap-2">
+                              <ShieldCheck className="w-4 h-4 text-orange-600" />
+                              {cov.title}
+                            </div>
+                            <div className="text-xs text-slate-500">{cov.description}</div>
+                          </TableCell>
 
-                        <TableCell className="px-6 py-4">
-                          <Input
-                            type="text"
-                            value={state.value}
-                            onChange={(e) => handleValueChange(cov._id, e.target.value)}
-                            disabled={!state.isCovered}
-                            placeholder="e.g. Yes, Covered up to 2%, or 100%"
-                            className="max-w-md bg-slate-50 border-slate-200 text-slate-900 text-xs focus-visible:ring-orange-500 disabled:opacity-50"
-                          />
-                        </TableCell>
+                          <TableCell className="px-6 py-4">
+                            <Input
+                              type="text"
+                              value={state.value}
+                              onChange={(e) => handleValueChange(cov._id, e.target.value)}
+                              disabled={!state.isCovered}
+                              placeholder="e.g. Yes, Covered up to 2%, or 100%"
+                              className="max-w-md bg-slate-50 border-slate-200 text-slate-900 text-xs focus-visible:ring-orange-500 disabled:opacity-50"
+                            />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
 
-                        <TableCell className="px-6 py-4 text-right">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleSaveSingleRow(cov._id)}
-                            disabled={isSavingThis}
-                            className="h-8 text-xs border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                          >
-                            {isSavingThis ? (
-                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            ) : (
-                              <CheckCircle2 className="w-3.5 h-3.5 mr-1 text-emerald-600" />
-                            )}
-                            Save Row
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
+            {/* Bottom Save All Action Bar */}
+            {coverages.length > 0 && (
+              <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-xs text-slate-500 font-medium">
+                  Select coverages and enter limit details above, then click save to update all matrix items at once.
+                </div>
+                <Button
+                  onClick={handleSaveAll}
+                  disabled={savingAll || loading}
+                  className="bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl shadow-md shadow-orange-600/20 text-xs sm:text-sm h-11 px-6 w-full sm:w-auto"
+                >
+                  {savingAll ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4 mr-2" />
+                  )}
+                  Save All Coverages
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>

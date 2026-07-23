@@ -20,6 +20,7 @@ const pageTitles: Record<string, string> = {
   "/admin/plans": "Insurance Plans & Options",
   "/admin/masters": "Master Data Center",
   "/admin/matrix": "Plan Option Coverage Matrix",
+  "/admin/tabulation": "Plan Tabulation & Policy Matrix",
   "/admin/policy-conditions": "Policy Terms & Sub-limits",
   "/admin/rate-cards": "Premium Rates & Bulk Excel",
   "/admin/applications": "Customer Applications Review",

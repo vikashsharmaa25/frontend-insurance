@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import {
   getPlansApi,
@@ -27,6 +28,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Settings,
+  ShieldCheck,
+  Table as TableIcon,
   Image as ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -398,6 +401,26 @@ export default function PlansPage() {
                         >
                           <Settings className="w-3.5 h-3.5 mr-1" /> Options
                         </Button>
+
+                        <Link href={`/admin/matrix?planId=${plan._id}`}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 text-xs border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
+                          >
+                            <ShieldCheck className="w-3.5 h-3.5 mr-1" /> Coverages
+                          </Button>
+                        </Link>
+
+                        <Link href={`/admin/tabulation?planId=${plan._id}`}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 text-xs border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                          >
+                            <TableIcon className="w-3.5 h-3.5 mr-1" /> Tabulation
+                          </Button>
+                        </Link>
 
                         <Button
                           size="sm"

@@ -12,6 +12,7 @@ import {
   FileText,
   BadgePercent,
   ClipboardList,
+  Table,
   ShieldAlert,
   ChevronRight,
   Sparkles,
@@ -51,6 +52,12 @@ const navItems: NavItem[] = [
     icon: Grid2X2,
   },
   {
+    title: "Plan Tabulation",
+    href: "/admin/tabulation",
+    icon: Table,
+    badge: "Matrix",
+  },
+  {
     title: "Policy Terms",
     href: "/admin/policy-conditions",
     icon: FileText,
@@ -80,20 +87,20 @@ export function AdminSidebar({
   return (
     <aside
       className={cn(
-        "h-screen sticky top-0 shrink-0 z-40 w-64 border-r border-slate-200 bg-white/95 backdrop-blur-xl transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 flex flex-col justify-between shadow-xs select-none",
+        "h-screen sticky top-0 shrink-0 z-40 w-68 border-r border-slate-200 bg-white/95 backdrop-blur-xl transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 flex flex-col justify-between shadow-xs select-none",
         isOpen ? "fixed inset-y-0 left-0 translate-x-0 shadow-2xl shadow-orange-500/10" : "fixed inset-y-0 left-0 -translate-x-full lg:translate-x-0"
       )}
     >
       {/* Brand Header (Fixed at top of sidebar) */}
       <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
-        <div className="h-16 shrink-0 flex items-center px-6 border-b border-slate-100 justify-between bg-white sticky top-0 z-10">
+        <div className="h-16 shrink-0 flex items-center px-5 border-b border-slate-100 justify-between bg-white sticky top-0 z-10">
           <Link href="/admin/dashboard" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-linear-to-tr from-orange-600 via-amber-500 to-orange-400 p-px shadow-md shadow-orange-500/20 group-hover:scale-105 transition-transform duration-200">
+            <div className="w-10 h-10 rounded-xl bg-linear-to-tr from-orange-600 via-amber-500 to-orange-400 p-px shadow-md shadow-orange-500/20 group-hover:scale-105 transition-transform duration-200 shrink-0">
               <div className="w-full h-full bg-white rounded-[11px] flex items-center justify-center">
                 <ShieldAlert className="w-5 h-5 text-orange-600" />
               </div>
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col whitespace-nowrap">
               <span className="font-extrabold text-slate-900 text-base tracking-tight flex items-center gap-1.5">
                 ICICI <span className="text-orange-600">Portal</span>
                 <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
@@ -107,7 +114,7 @@ export function AdminSidebar({
 
         {/* Navigation Links */}
         <div className="px-3 py-5 space-y-1">
-          <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+          <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 whitespace-nowrap">
             Main Management
           </p>
 
@@ -124,9 +131,9 @@ export function AdminSidebar({
                   href={item.href}
                   onClick={onClose}
                   className={cn(
-                    "relative flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group",
+                    "relative flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 group whitespace-nowrap",
                     isActive
-                      ? "text-orange-700 font-bold bg-orange-50/80 border border-orange-200/80 shadow-sm shadow-orange-500/5"
+                      ? "text-orange-700 font-bold bg-orange-50/80 border border-orange-200/80 shadow-xs shadow-orange-500/5"
                       : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70"
                   )}
                 >
@@ -138,27 +145,27 @@ export function AdminSidebar({
                     />
                   )}
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
                     <Icon
                       className={cn(
-                        "w-4 h-4 transition-colors duration-200",
+                        "w-4 h-4 shrink-0 transition-colors duration-200",
                         isActive
                           ? "text-orange-600"
                           : "text-slate-400 group-hover:text-slate-600"
                       )}
                     />
-                    <span>{item.title}</span>
+                    <span className="whitespace-nowrap tracking-tight">{item.title}</span>
                   </div>
 
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 shrink-0 ml-2">
                     {item.badge && (
-                      <Badge variant="outline" className="px-1.5 py-0.2 text-[10px] font-bold tracking-wider uppercase bg-orange-100 text-orange-700 border-orange-200">
+                      <Badge variant="outline" className="px-1.5 py-0.2 text-[9px] font-bold tracking-wider uppercase bg-orange-100 text-orange-700 border-orange-200 shrink-0">
                         {item.badge}
                       </Badge>
                     )}
                     <ChevronRight
                       className={cn(
-                        "w-3.5 h-3.5 transition-transform duration-200",
+                        "w-3.5 h-3.5 shrink-0 transition-transform duration-200",
                         isActive
                           ? "text-orange-600 opacity-100"
                           : "opacity-0 group-hover:opacity-60 text-slate-400 group-hover:translate-x-0.5"

@@ -189,6 +189,18 @@ export const savePlanOptionCoverageApi = (data: {
   return api.post("/api/admin/plan-option-coverages", data);
 };
 
+export const savePlanOptionCoverageBatchApi = (data: {
+  planId: string;
+  optionId: string;
+  coverages: Array<{
+    coverageId: string;
+    isCovered: boolean;
+    value: string;
+  }>;
+}) => {
+  return api.post("/api/admin/plan-option-coverages/batch", data);
+};
+
 // ----------------------------------------------------
 // 📄 9. Policy Conditions & Sub-limits Module
 // ----------------------------------------------------
