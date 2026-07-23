@@ -289,3 +289,32 @@ export const updateApplicationStatusApi = (
 ) => {
   return api.patch(`/api/admin/applications/${id}/status`, payload);
 };
+
+// ----------------------------------------------------
+// 📱 12. Customer Applied Insurances & Applications Module
+// ----------------------------------------------------
+export interface GetCustomerApplicationsParams {
+  status?: string;
+  page?: number;
+  limit?: number;
+}
+
+/** Get list of all insurance policies applied by the logged-in customer */
+export const getMyApplicationsApi = (params?: GetCustomerApplicationsParams) => {
+  const query = new URLSearchParams();
+  if (params?.status && params.status !== "all") query.set("status", params.status);
+  if (params?.page) query.set("page", params.page.toString());
+  if (params?.limit) query.set("limit", params.limit.toString());
+  return api.get(`/api/customer/applications?${query.toString()}`);
+};
+
+/** Get detailed view of a specific insurance application submitted by customer */
+export const getCustomerApplicationDetailApi = (id: string) => {
+  return api.get(`/api/customer/applications/${id}`);
+};
+
+/** Apply for a new insurance policy */
+export const applyForInsurancePolicyApi = (payload: any) => {
+  return api.post("/api/customer/applications", payload);
+};
+
