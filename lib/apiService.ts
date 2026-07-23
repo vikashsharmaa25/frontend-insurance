@@ -372,6 +372,10 @@ export const getApplicationsApi = (params?: GetApplicationsParams) => {
   return api.get(`/api/admin/applications?${query.toString()}`);
 };
 
+export const getDashboardStatsApi = () => {
+  return api.get("/api/admin/dashboard/stats");
+};
+
 export const getApplicationDetailApi = (id: string) => {
   return api.get(`/api/admin/applications/${id}`);
 };

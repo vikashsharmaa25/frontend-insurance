@@ -3,11 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import {
-  getPlansApi,
-  getCoveragesApi,
-  getApplicationsApi,
-} from "@/lib/apiService";
+import { getDashboardStatsApi } from "@/lib/apiService";
 import { toast } from "sonner";
 import {
   Layers,
@@ -21,6 +17,7 @@ import {
   Loader2,
   Eye,
   RefreshCw,
+  IndianRupee,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +28,7 @@ export default function DashboardPage() {
     totalCoverages: 0,
     pendingApps: 0,
     approvedApps: 0,
+    totalRevenue: 0,
   });
   const [recentApps, setRecentApps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,52 +36,25 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [plansRes, coveragesRes, pendingRes, approvedRes, recentRes] = await Promise.allSettled([
-        getPlansApi({ status: "active", limit: 1 }),
-        getCoveragesApi(),
-        getApplicationsApi({ status: "PENDING_APPROVAL", limit: 1 }),
-        getApplicationsApi({ status: "APPROVED", limit: 1 }),
-        getApplicationsApi({ limit: 5 }),
-      ]);
+      const res = await getDashboardStatsApi();
+      const data = res.data?.data;
 
-      const activePlansCount =
-        plansRes.status === "fulfilled"
-          ? plansRes.value.data?.data?.pagination?.total ?? plansRes.value.data?.data?.plans?.length ?? 0
-          : 0;
+      if (data?.stats) {
+        setStats({
+          activePlans: data.stats.activePlans || 0,
+          totalCoverages: data.stats.totalCoverages || 0,
+          pendingApps: data.stats.pendingApps || 0,
+          approvedApps: data.stats.approvedApps || 0,
+          totalRevenue: data.stats.totalRevenue || 0,
+        });
+      }
 
-      const coveragesCount =
-        coveragesRes.status === "fulfilled"
-          ? Array.isArray(coveragesRes.value.data?.data)
-            ? coveragesRes.value.data.data.length
-            : coveragesRes.value.data?.data?.coverages?.length ?? 0
-          : 0;
-
-      const pendingCount =
-        pendingRes.status === "fulfilled"
-          ? pendingRes.value.data?.data?.pagination?.total ?? pendingRes.value.data?.data?.applications?.length ?? 0
-          : 0;
-
-      const approvedCount =
-        approvedRes.status === "fulfilled"
-          ? approvedRes.value.data?.data?.pagination?.total ?? approvedRes.value.data?.data?.applications?.length ?? 0
-          : 0;
-
-      const applicationsList =
-        recentRes.status === "fulfilled"
-          ? recentRes.value.data?.data?.applications || recentRes.value.data?.data || []
-          : [];
-
-      setStats({
-        activePlans: activePlansCount,
-        totalCoverages: coveragesCount,
-        pendingApps: pendingCount,
-        approvedApps: approvedCount,
-      });
-
-      setRecentApps(applicationsList);
+      if (Array.isArray(data?.recentApplications)) {
+        setRecentApps(data.recentApplications);
+      }
     } catch (error) {
-      console.error("Dashboard fetch error:", error);
-      toast.error("Failed to load dashboard metrics");
+      console.error("Dashboard stats API fetch error:", error);
+      toast.error("Failed to load executive dashboard metrics");
     } finally {
       setLoading(false);
     }
@@ -135,7 +106,7 @@ export default function DashboardPage() {
             <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight flex items-center gap-2">
               ICICI Executive Dashboard
               <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/20 text-white font-mono font-bold">
-                REALTIME
+                REALTIME API
               </span>
             </h2>
             <p className="text-xs sm:text-sm text-orange-100">
@@ -234,6 +205,26 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Total Revenue Highlight Banner (if revenue exists) */}
+        {stats.totalRevenue > 0 && (
+          <div className="p-4 rounded-2xl bg-slate-900 text-white flex items-center justify-between shadow-md">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold">
+                <IndianRupee className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Total Policy Revenue Collected</h4>
+                <div className="text-xl font-mono font-extrabold text-emerald-400">
+                  ₹{Number(stats.totalRevenue).toLocaleString()}
+                </div>
+              </div>
+            </div>
+            <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
+              Verified Revenue
+            </Badge>
+          </div>
+        )}
 
         {/* Quick Action Buttons */}
         <div className="space-y-3">
