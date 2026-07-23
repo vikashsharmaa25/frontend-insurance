@@ -317,6 +317,25 @@ export const createPremiumRateApi = (data: {
   return api.post("/api/admin/premium-rates", data);
 };
 
+export const updatePremiumRateApi = (
+  id: string,
+  data: Partial<{
+    planId: string;
+    sumInsuredId: string;
+    ageSlabId: string;
+    familyTypeId: string;
+    basePremium: number;
+    gstPercentage: number;
+    status: string;
+  }>
+) => {
+  return api.put(`/api/admin/premium-rates/${id}`, data);
+};
+
+export const deletePremiumRateApi = (id: string) => {
+  return api.delete(`/api/admin/premium-rates/${id}`);
+};
+
 export const uploadPremiumExcelApi = (file: File) => {
   const formData = new FormData();
   formData.append("file", file);

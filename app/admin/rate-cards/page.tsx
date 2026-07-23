@@ -9,6 +9,8 @@ import {
   getFamilyTypesApi,
   getPremiumRatesApi,
   createPremiumRateApi,
+  updatePremiumRateApi,
+  deletePremiumRateApi,
   uploadPremiumExcelApi,
   downloadExcelTemplateApi,
   getExcelTemplateDownloadUrl,
@@ -25,6 +27,8 @@ import {
   ChevronRight,
   BadgePercent,
   CheckCircle2,
+  Edit2,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -61,13 +65,21 @@ export default function RateCardsPage() {
 
   // Single Rate Entry Modal state
   const [isRateModalOpen, setIsRateModalOpen] = useState(false);
+  const [editingRate, setEditingRate] = useState<any | null>(null);
   const [submittingRate, setSubmittingRate] = useState(false);
-  const [rateForm, setRateForm] = useState({
+  const [rateForm, setRateForm] = useState<{
+    planId: string;
+    sumInsuredId: string;
+    ageSlabId: string;
+    familyTypeId: string;
+    basePremium: number | string;
+    gstPercentage: number | string;
+  }>({
     planId: "",
     sumInsuredId: "",
     ageSlabId: "",
     familyTypeId: "",
-    basePremium: 3442,
+    basePremium: "",
     gstPercentage: 18,
   });
 
@@ -194,18 +206,73 @@ export default function RateCardsPage() {
     }
   };
 
-  // Save single rate entry
+  // Open rate modal (Create vs Edit)
+  const handleOpenRateModal = (rate?: any) => {
+    if (rate) {
+      setEditingRate(rate);
+      setRateForm({
+        planId: typeof rate.planId === "object" ? rate.planId._id : rate.planId || plans[0]?._id || "",
+        sumInsuredId: typeof rate.sumInsuredId === "object" ? rate.sumInsuredId._id : rate.sumInsuredId || sumInsuredList[0]?._id || "",
+        ageSlabId: typeof rate.ageSlabId === "object" ? rate.ageSlabId._id : rate.ageSlabId || ageSlabsList[0]?._id || "",
+        familyTypeId: typeof rate.familyTypeId === "object" ? rate.familyTypeId._id : rate.familyTypeId || familyTypesList[0]?._id || "",
+        basePremium: rate.basePremium ?? "",
+        gstPercentage: rate.gstPercentage ?? 18,
+      });
+    } else {
+      setEditingRate(null);
+      setRateForm({
+        planId: selectedPlanId || plans[0]?._id || "",
+        sumInsuredId: sumInsuredList[0]?._id || "",
+        ageSlabId: ageSlabsList[0]?._id || "",
+        familyTypeId: familyTypesList[0]?._id || "",
+        basePremium: "",
+        gstPercentage: 18,
+      });
+    }
+    setIsRateModalOpen(true);
+  };
+
+  // Delete rate entry handler
+  const handleDeleteRate = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this premium rate entry?")) return;
+    try {
+      await deletePremiumRateApi(id);
+      toast.success("Premium rate entry deleted successfully");
+      fetchRates();
+    } catch (err: any) {
+      console.error("Delete rate error:", err);
+      toast.error(err.response?.data?.message || "Failed to delete rate entry");
+    }
+  };
+
+  // Save single rate entry (create or update)
   const handleSaveSingleRate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (rateForm.basePremium === "" || isNaN(Number(rateForm.basePremium))) {
+      toast.error("Please enter a valid base premium amount");
+      return;
+    }
+
     try {
       setSubmittingRate(true);
-      await createPremiumRateApi(rateForm);
-      toast.success("Premium rate card created!");
+      const payload = {
+        ...rateForm,
+        basePremium: Number(rateForm.basePremium),
+        gstPercentage: Number(rateForm.gstPercentage) || 18,
+      };
+
+      if (editingRate) {
+        await updatePremiumRateApi(editingRate._id, payload);
+        toast.success("Premium rate entry updated successfully!");
+      } else {
+        await createPremiumRateApi(payload);
+        toast.success("Premium rate entry created successfully!");
+      }
       setIsRateModalOpen(false);
       fetchRates();
     } catch (err: any) {
       console.error("Single rate error:", err);
-      toast.error(err.response?.data?.message || "Failed to create rate entry");
+      toast.error(err.response?.data?.message || "Failed to save rate entry");
     } finally {
       setSubmittingRate(false);
     }
@@ -242,7 +309,7 @@ export default function RateCardsPage() {
             </Button>
 
             <Button
-              onClick={() => setIsRateModalOpen(true)}
+              onClick={() => handleOpenRateModal()}
               className="bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl shadow-md shadow-orange-600/20 text-xs h-10"
             >
               <Plus className="w-4 h-4 mr-1.5" /> Add Single Rate
@@ -307,6 +374,7 @@ export default function RateCardsPage() {
                   <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Family Type</TableHead>
                   <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Base Premium</TableHead>
                   <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Total (incl. 18% GST)</TableHead>
+                  <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -336,6 +404,28 @@ export default function RateCardsPage() {
                       </TableCell>
                       <TableCell className="px-6 py-4 font-extrabold text-slate-900 text-right">
                         ₹{total.toLocaleString("en-IN")}
+                      </TableCell>
+                      <TableCell className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleOpenRateModal(r)}
+                            className="h-8 w-8 p-0 text-slate-600 border-slate-200 hover:bg-slate-100"
+                            title="Edit Rate Entry"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDeleteRate(r._id)}
+                            className="h-8 w-8 p-0 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+                            title="Delete Rate Entry"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -376,7 +466,8 @@ export default function RateCardsPage() {
         <DialogContent className="sm:max-w-md bg-white border-slate-200 text-slate-900 rounded-2xl p-6">
           <DialogHeader className="border-b border-slate-100 pb-3">
             <DialogTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <BadgePercent className="w-5 h-5 text-orange-600" /> Create Premium Rate Entry
+              <BadgePercent className="w-5 h-5 text-orange-600" />
+              {editingRate ? "Edit Premium Rate Entry" : "Create Premium Rate Entry"}
             </DialogTitle>
           </DialogHeader>
 
@@ -458,9 +549,10 @@ export default function RateCardsPage() {
                 </label>
                 <Input
                   type="number"
+                  placeholder="e.g. 3500"
                   value={rateForm.basePremium}
-                  onChange={(e) => setRateForm({ ...rateForm, basePremium: Number(e.target.value) })}
-                  className="h-10 text-xs bg-slate-50 border-slate-200 focus:bg-white font-bold"
+                  onChange={(e) => setRateForm({ ...rateForm, basePremium: e.target.value })}
+                  className="h-10 text-xs bg-slate-50 border-slate-200 focus:bg-white font-bold text-slate-900"
                 />
               </div>
 
@@ -470,9 +562,10 @@ export default function RateCardsPage() {
                 </label>
                 <Input
                   type="number"
+                  placeholder="18"
                   value={rateForm.gstPercentage}
-                  onChange={(e) => setRateForm({ ...rateForm, gstPercentage: Number(e.target.value) })}
-                  className="h-10 text-xs bg-slate-50 border-slate-200 focus:bg-white font-bold"
+                  onChange={(e) => setRateForm({ ...rateForm, gstPercentage: e.target.value })}
+                  className="h-10 text-xs bg-slate-50 border-slate-200 focus:bg-white font-bold text-slate-900"
                 />
               </div>
             </div>

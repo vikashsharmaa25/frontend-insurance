@@ -66,7 +66,7 @@ function TabulationContent() {
 
   const [coverages, setCoverages] = useState<CoverageItem[]>([]);
   const [slabs, setSlabs] = useState<SumInsuredSlab[]>([]);
-  const [matrixData, setMatrixData] = useState<MatrixState>({});
+  const [planCoverageMap, setPlanCoverageMap] = useState<Record<string, { isCovered: boolean; value: string }>>({});
 
   const [rates, setRates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -139,36 +139,22 @@ function TabulationContent() {
 
         const rawMappings: Array<{
           coverageId: { _id: string } | string;
-          sumInsuredId: { _id: string } | string | null;
           isCovered: boolean;
           value: string;
         }> = matrixRes.data?.data || [];
 
-        // Build matrix: coverageId → sumInsuredId → CellState
-        const state: MatrixState = {};
+        const mapState: Record<string, { isCovered: boolean; value: string }> = {};
 
         rawMappings.forEach((m) => {
-          const covId =
-            typeof m.coverageId === "object" ? m.coverageId._id : m.coverageId;
-          const slabId =
-            m.sumInsuredId == null
-              ? null
-              : typeof m.sumInsuredId === "object"
-              ? m.sumInsuredId._id
-              : m.sumInsuredId;
-
+          const covId = typeof m.coverageId === "object" ? m.coverageId._id : m.coverageId;
           if (!covId) return;
-          if (!state[covId]) state[covId] = {};
-
-          if (slabId) {
-            state[covId][slabId] = {
-              isCovered: Boolean(m.isCovered),
-              value: m.value || (m.isCovered ? "Yes" : "No"),
-            };
-          }
+          mapState[covId] = {
+            isCovered: Boolean(m.isCovered),
+            value: m.value || (m.isCovered ? "Yes" : "No"),
+          };
         });
 
-        setMatrixData(state);
+        setPlanCoverageMap(mapState);
         setRates(ratesRes.data?.data?.rates || ratesRes.data?.data || []);
       } catch (err) {
         console.error("Fetch plan details error:", err);
@@ -179,10 +165,6 @@ function TabulationContent() {
 
     fetchPlanDetails();
   }, [selectedPlanId]);
-
-  // ── Helper ────────────────────────────────────────────────────────────────
-  const getCell = (covId: string, slabId: string): CellState =>
-    matrixData[covId]?.[slabId] ?? { isCovered: false, value: "No" };
 
   // ─────────────────────────────────────────────────────────────────────────
 
@@ -275,85 +257,62 @@ function TabulationContent() {
                 <Loader2 className="w-6 h-6 animate-spin mx-auto text-orange-600 mb-2" />
                 Loading Coverage Matrix...
               </div>
-            ) : slabs.length === 0 ? (
+            ) : coverages.length === 0 ? (
               <div className="p-12 text-center rounded-2xl border border-slate-200 bg-white text-slate-400 text-sm">
-                No Sum Insured slabs found. Add slabs in Master Data first.
+                No coverages found. Add coverages in Master Data first.
               </div>
             ) : (
-              <div className="rounded-2xl border border-red-200 bg-white overflow-hidden shadow-md">
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      {/* Row 1: Cover Names | Sum Insured Slabs (spanning) */}
-                      <tr>
-                        <th
-                          className="border border-red-700 bg-red-600 px-6 py-3 text-left text-xs font-extrabold text-white uppercase tracking-wider"
-                          style={{ minWidth: 220 }}
-                        >
-                          Cover Names
-                        </th>
-                        <th
-                          colSpan={slabs.length}
-                          className="border border-red-700 bg-red-600 px-6 py-3 text-center text-xs font-extrabold text-white uppercase tracking-wider"
-                        >
-                          Sum Insured Slabs
-                        </th>
-                      </tr>
-
-                      {/* Row 2: slab names */}
-                      <tr>
-                        <th className="border border-red-600 bg-red-500 px-6 py-2.5 text-left text-xs font-bold text-white uppercase">
-                          Coverage Item
-                        </th>
-                        {slabs.map((slab) => (
-                          <th
-                            key={slab._id}
-                            className="border border-red-600 bg-red-500 px-5 py-2.5 text-center text-sm font-black text-white"
-                            style={{ minWidth: 90 }}
-                          >
-                            {slab.displayName}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                      {coverages.map((cov, idx) => (
+              <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs">
+                <table className="w-full border-collapse text-sm">
+                  <thead>
+                    <tr className="bg-slate-900 text-white">
+                      <th className="px-6 py-3.5 text-center text-xs font-bold uppercase tracking-wider w-28">
+                        Status
+                      </th>
+                      <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider">
+                        Coverage Item &amp; Details
+                      </th>
+                      <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider w-64">
+                        Coverage Limit / Value
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {coverages.map((cov, idx) => {
+                      const cell = planCoverageMap[cov._id] || { isCovered: false, value: "No" };
+                      const isYes = cell.isCovered || (cell.value && cell.value.toLowerCase() !== "no");
+                      return (
                         <tr
                           key={cov._id}
-                          className={idx % 2 === 0 ? "bg-white" : "bg-slate-50"}
+                          className={isYes ? "bg-emerald-50/20 hover:bg-emerald-50/40" : "bg-white hover:bg-slate-50"}
                         >
-                          <td className="border border-slate-200 px-6 py-3.5 text-xs font-bold text-slate-800">
-                            {cov.title}
+                          <td className="px-6 py-4 text-center">
+                            {isYes ? (
+                              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                Covered
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-extrabold bg-slate-100 text-slate-500 border border-slate-200">
+                                Not Covered
+                              </span>
+                            )}
                           </td>
-                          {slabs.map((slab) => {
-                            const cell = getCell(cov._id, slab._id);
-                            const isYes =
-                              cell.isCovered ||
-                              cell.value?.toLowerCase() === "yes";
-
-                            return (
-                              <td
-                                key={slab._id}
-                                className="border border-slate-200 px-4 py-3.5 text-center"
-                              >
-                                {isYes ? (
-                                  <span className="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-xs">
-                                    Yes
-                                  </span>
-                                ) : (
-                                  <span className="inline-block px-3 py-1 rounded-full bg-amber-100 text-amber-900 font-extrabold text-xs">
-                                    No
-                                  </span>
-                                )}
-                              </td>
-                            );
-                          })}
+                          <td className="px-6 py-4">
+                            <div className="font-bold text-slate-900 text-sm">{cov.title}</div>
+                            {cov.description && (
+                              <div className="text-xs text-slate-500 font-normal mt-0.5">{cov.description}</div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`text-xs font-bold ${isYes ? "text-slate-900 font-mono" : "text-slate-400"}`}>
+                              {cell.value || (isYes ? "Yes" : "No")}
+                            </span>
+                          </td>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
           </TabsContent>
