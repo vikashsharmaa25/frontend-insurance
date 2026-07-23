@@ -75,11 +75,11 @@ export default function MasterDataPage() {
   const [deletingItem, setDeletingItem] = useState<any | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // Form states
-  const [coverageForm, setCoverageForm] = useState({ title: "", description: "", icon: "shield", status: "active" });
-  const [sumInsuredForm, setSumInsuredForm] = useState({ amount: 500000, displayName: "5 Lakhs", status: "active" });
-  const [ageSlabForm, setAgeSlabForm] = useState({ minAge: 18, maxAge: 25, displayName: "18-25 Years", status: "active" });
-  const [familyTypeForm, setFamilyTypeForm] = useState({ name: "1 Adult + 1 Kid", code: "1A+1K", adultCount: 1, childCount: 1, status: "active" });
+  // Form states - Empty initial values (no pre-filled sample text/numbers)
+  const [coverageForm, setCoverageForm] = useState({ title: "", description: "", status: "active" });
+  const [sumInsuredForm, setSumInsuredForm] = useState<{ amount: number | string; displayName: string; status: string }>({ amount: "", displayName: "", status: "active" });
+  const [ageSlabForm, setAgeSlabForm] = useState<{ minAge: number | string; maxAge: number | string; displayName: string; status: string }>({ minAge: "", maxAge: "", displayName: "", status: "active" });
+  const [familyTypeForm, setFamilyTypeForm] = useState<{ name: string; code: string; adultCount: number | string; childCount: number | string; status: string }>({ name: "", code: "", adultCount: "", childCount: "", status: "active" });
 
   const fetchMasterData = useCallback(async () => {
     try {
@@ -114,10 +114,10 @@ export default function MasterDataPage() {
 
   const openCreateModal = () => {
     setEditingItem(null);
-    setCoverageForm({ title: "", description: "", icon: "shield", status: "active" });
-    setSumInsuredForm({ amount: 500000, displayName: "5 Lakhs", status: "active" });
-    setAgeSlabForm({ minAge: 18, maxAge: 25, displayName: "18-25 Years", status: "active" });
-    setFamilyTypeForm({ name: "1 Adult + 1 Kid", code: "1A+1K", adultCount: 1, childCount: 1, status: "active" });
+    setCoverageForm({ title: "", description: "", status: "active" });
+    setSumInsuredForm({ amount: "", displayName: "", status: "active" });
+    setAgeSlabForm({ minAge: "", maxAge: "", displayName: "", status: "active" });
+    setFamilyTypeForm({ name: "", code: "", adultCount: "", childCount: "", status: "active" });
     setIsModalOpen(true);
   };
 
@@ -127,19 +127,18 @@ export default function MasterDataPage() {
       setCoverageForm({
         title: item.title || "",
         description: item.description || "",
-        icon: item.icon || "shield",
         status: item.status || "active",
       });
     } else if (activeTab === "sum-insured") {
       setSumInsuredForm({
-        amount: item.amount || 0,
+        amount: item.amount !== undefined ? item.amount : "",
         displayName: item.displayName || "",
         status: item.status || "active",
       });
     } else if (activeTab === "age-slabs") {
       setAgeSlabForm({
-        minAge: item.minAge || 0,
-        maxAge: item.maxAge || 0,
+        minAge: item.minAge !== undefined ? item.minAge : "",
+        maxAge: item.maxAge !== undefined ? item.maxAge : "",
         displayName: item.displayName || "",
         status: item.status || "active",
       });
@@ -147,8 +146,8 @@ export default function MasterDataPage() {
       setFamilyTypeForm({
         name: item.name || "",
         code: item.code || "",
-        adultCount: item.adultCount || 0,
-        childCount: item.childCount || 0,
+        adultCount: item.adultCount !== undefined ? item.adultCount : "",
+        childCount: item.childCount !== undefined ? item.childCount : "",
         status: item.status || "active",
       });
     }
@@ -164,34 +163,52 @@ export default function MasterDataPage() {
     e.preventDefault();
     try {
       setSubmitting(true);
+
+      // Prepared payload formatted correctly
+      const coveragePayload = { ...coverageForm };
+      const sumInsuredPayload = {
+        ...sumInsuredForm,
+        amount: Number(sumInsuredForm.amount),
+      };
+      const ageSlabPayload = {
+        ...ageSlabForm,
+        minAge: Number(ageSlabForm.minAge),
+        maxAge: Number(ageSlabForm.maxAge),
+      };
+      const familyTypePayload = {
+        ...familyTypeForm,
+        adultCount: Number(familyTypeForm.adultCount || 0),
+        childCount: Number(familyTypeForm.childCount || 0),
+      };
+
       if (editingItem) {
         // UPDATE MODE
         if (activeTab === "coverages") {
-          await updateCoverageApi(editingItem._id, coverageForm);
+          await updateCoverageApi(editingItem._id, coveragePayload);
           toast.success("Coverage item updated!");
         } else if (activeTab === "sum-insured") {
-          await updateSumInsuredApi(editingItem._id, sumInsuredForm);
+          await updateSumInsuredApi(editingItem._id, sumInsuredPayload);
           toast.success("Sum Insured slab updated!");
         } else if (activeTab === "age-slabs") {
-          await updateAgeSlabApi(editingItem._id, ageSlabForm);
+          await updateAgeSlabApi(editingItem._id, ageSlabPayload);
           toast.success("Age slab updated!");
         } else if (activeTab === "family-types") {
-          await updateFamilyTypeApi(editingItem._id, familyTypeForm);
+          await updateFamilyTypeApi(editingItem._id, familyTypePayload);
           toast.success("Family type updated!");
         }
       } else {
         // CREATE MODE
         if (activeTab === "coverages") {
-          await createCoverageApi(coverageForm);
+          await createCoverageApi(coveragePayload);
           toast.success("Coverage item created!");
         } else if (activeTab === "sum-insured") {
-          await createSumInsuredApi(sumInsuredForm);
+          await createSumInsuredApi(sumInsuredPayload);
           toast.success("Sum Insured slab created!");
         } else if (activeTab === "age-slabs") {
-          await createAgeSlabApi(ageSlabForm);
+          await createAgeSlabApi(ageSlabPayload);
           toast.success("Age slab created!");
         } else if (activeTab === "family-types") {
-          await createFamilyTypeApi(familyTypeForm);
+          await createFamilyTypeApi(familyTypePayload);
           toast.success("Family composition type created!");
         }
       }
@@ -239,6 +256,11 @@ export default function MasterDataPage() {
     const str = JSON.stringify(item).toLowerCase();
     return str.includes(term);
   });
+
+  const getColSpan = () => {
+    if (activeTab === "family-types") return 5;
+    return 4;
+  };
 
   return (
     <AdminLayout>
@@ -320,7 +342,6 @@ export default function MasterDataPage() {
                 <TableRow className="border-b border-slate-200">
                   <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Title</TableHead>
                   <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Description</TableHead>
-                  <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Icon Token</TableHead>
                   <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</TableHead>
                   <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</TableHead>
                 </TableRow>
@@ -355,14 +376,14 @@ export default function MasterDataPage() {
             <TableBody className="divide-y divide-slate-100">
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="px-6 py-12 text-center text-slate-400">
+                  <TableCell colSpan={getColSpan()} className="px-6 py-12 text-center text-slate-400">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto text-orange-600 mb-2" />
                     Loading master records...
                   </TableCell>
                 </TableRow>
               ) : filteredItems.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="px-6 py-12 text-center text-slate-400 text-sm">
+                  <TableCell colSpan={getColSpan()} className="px-6 py-12 text-center text-slate-400 text-sm">
                     No records found for &quot;{activeTab}&quot;. Click &quot;Add New Master Item&quot; to create one.
                   </TableCell>
                 </TableRow>
@@ -373,7 +394,6 @@ export default function MasterDataPage() {
                       <>
                         <TableCell className="px-6 py-4 font-bold text-slate-900">{item.title}</TableCell>
                         <TableCell className="px-6 py-4 text-xs text-slate-500 max-w-sm truncate">{item.description}</TableCell>
-                        <TableCell className="px-6 py-4 font-mono text-xs text-orange-600 font-bold">{item.icon || "hospital"}</TableCell>
                         <TableCell className="px-6 py-4">
                           <Badge
                             className={
@@ -520,18 +540,6 @@ export default function MasterDataPage() {
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider block mb-1">
-                    Icon Token
-                  </label>
-                  <Input
-                    type="text"
-                    placeholder="e.g. hospital-building"
-                    value={coverageForm.icon}
-                    onChange={(e) => setCoverageForm({ ...coverageForm, icon: e.target.value })}
-                    className="bg-slate-50 border-slate-200 text-orange-600 font-mono font-bold focus-visible:ring-orange-500"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider block mb-1">
                     Status
                   </label>
                   <select
@@ -555,12 +563,16 @@ export default function MasterDataPage() {
                   <Input
                     type="number"
                     required
-                    placeholder="500000"
+                    placeholder="e.g. 500000"
                     value={sumInsuredForm.amount}
                     onChange={(e) => {
-                      const amount = Number(e.target.value);
-                      let displayName = `${amount / 100000} Lakhs`;
-                      if (amount >= 10000000) displayName = `${amount / 10000000} Crore`;
+                      const val = e.target.value;
+                      const amount = val === "" ? "" : Number(val);
+                      let displayName = sumInsuredForm.displayName;
+                      if (typeof amount === "number" && amount > 0) {
+                        if (amount >= 10000000) displayName = `${amount / 10000000} Crore`;
+                        else displayName = `${amount / 100000} Lakhs`;
+                      }
                       setSumInsuredForm({ ...sumInsuredForm, amount, displayName });
                     }}
                     className="bg-slate-50 border-slate-200 text-slate-900 focus-visible:ring-orange-500 font-mono font-semibold"
@@ -605,13 +617,17 @@ export default function MasterDataPage() {
                     <Input
                       type="number"
                       required
+                      placeholder="e.g. 18"
                       value={ageSlabForm.minAge}
                       onChange={(e) => {
-                        const minAge = Number(e.target.value);
+                        const val = e.target.value;
+                        const minAge = val === "" ? "" : Number(val);
+                        const maxAge = ageSlabForm.maxAge;
+                        const displayName = (minAge !== "" && maxAge !== "") ? `${minAge}-${maxAge} Years` : ageSlabForm.displayName;
                         setAgeSlabForm({
                           ...ageSlabForm,
                           minAge,
-                          displayName: `${minAge}-${ageSlabForm.maxAge} Years`,
+                          displayName,
                         });
                       }}
                       className="bg-slate-50 border-slate-200 text-slate-900 focus-visible:ring-orange-500 font-mono font-semibold"
@@ -624,13 +640,17 @@ export default function MasterDataPage() {
                     <Input
                       type="number"
                       required
+                      placeholder="e.g. 25"
                       value={ageSlabForm.maxAge}
                       onChange={(e) => {
-                        const maxAge = Number(e.target.value);
+                        const val = e.target.value;
+                        const maxAge = val === "" ? "" : Number(val);
+                        const minAge = ageSlabForm.minAge;
+                        const displayName = (minAge !== "" && maxAge !== "") ? `${minAge}-${maxAge} Years` : ageSlabForm.displayName;
                         setAgeSlabForm({
                           ...ageSlabForm,
                           maxAge,
-                          displayName: `${ageSlabForm.minAge}-${maxAge} Years`,
+                          displayName,
                         });
                       }}
                       className="bg-slate-50 border-slate-200 text-slate-900 focus-visible:ring-orange-500 font-mono font-semibold"
@@ -644,6 +664,7 @@ export default function MasterDataPage() {
                   <Input
                     type="text"
                     required
+                    placeholder="e.g. 18-25 Years"
                     value={ageSlabForm.displayName}
                     onChange={(e) => setAgeSlabForm({ ...ageSlabForm, displayName: e.target.value })}
                     className="bg-slate-50 border-slate-200 text-slate-900 focus-visible:ring-orange-500"
@@ -687,7 +708,7 @@ export default function MasterDataPage() {
                   <Input
                     type="text"
                     required
-                    placeholder="1A+1K"
+                    placeholder="e.g. 1A+1K"
                     value={familyTypeForm.code}
                     onChange={(e) => setFamilyTypeForm({ ...familyTypeForm, code: e.target.value })}
                     className="bg-slate-50 border-slate-200 font-mono text-orange-600 font-bold focus-visible:ring-orange-500"
@@ -700,8 +721,9 @@ export default function MasterDataPage() {
                     </label>
                     <Input
                       type="number"
+                      placeholder="e.g. 1"
                       value={familyTypeForm.adultCount}
-                      onChange={(e) => setFamilyTypeForm({ ...familyTypeForm, adultCount: Number(e.target.value) })}
+                      onChange={(e) => setFamilyTypeForm({ ...familyTypeForm, adultCount: e.target.value === "" ? "" : Number(e.target.value) })}
                       className="bg-slate-50 border-slate-200 text-slate-900 focus-visible:ring-orange-500 font-mono font-semibold"
                     />
                   </div>
@@ -711,8 +733,9 @@ export default function MasterDataPage() {
                     </label>
                     <Input
                       type="number"
+                      placeholder="e.g. 1"
                       value={familyTypeForm.childCount}
-                      onChange={(e) => setFamilyTypeForm({ ...familyTypeForm, childCount: Number(e.target.value) })}
+                      onChange={(e) => setFamilyTypeForm({ ...familyTypeForm, childCount: e.target.value === "" ? "" : Number(e.target.value) })}
                       className="bg-slate-50 border-slate-200 text-slate-900 focus-visible:ring-orange-500 font-mono font-semibold"
                     />
                   </div>
