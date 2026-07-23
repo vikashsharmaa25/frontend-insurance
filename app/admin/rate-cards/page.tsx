@@ -498,6 +498,97 @@ export default function RateCardsPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk Excel Upload Modal */}
+      <Dialog open={isExcelModalOpen} onOpenChange={setIsExcelModalOpen}>
+        <DialogContent className="sm:max-w-lg bg-white border-slate-200 text-slate-900 rounded-2xl p-6">
+          <DialogHeader className="border-b border-slate-100 pb-3">
+            <DialogTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <FileSpreadsheet className="w-5 h-5 text-emerald-600" /> Bulk Upload Insurance Master Data
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleUploadExcel} className="space-y-4 pt-3">
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-2">
+              <p className="font-bold text-slate-800">📋 Excel Upload Guide:</p>
+              <ul className="list-disc list-inside space-y-1 text-slate-500">
+                <li>Upload an Excel file (<code className="font-mono bg-slate-200 px-1 py-0.5 rounded text-slate-700">.xlsx</code> or <code className="font-mono bg-slate-200 px-1 py-0.5 rounded text-slate-700">.csv</code>).</li>
+                <li>Imports Plans, Coverages, Coverage Matrix, Sum Insured, Age Slabs, Family Types, &amp; Rates.</li>
+              </ul>
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={handleDownloadTemplate}
+                  className="text-orange-600 font-bold hover:underline inline-flex items-center gap-1"
+                >
+                  <Download className="w-3.5 h-3.5" /> Download Standard Sample Excel Template
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider block mb-1.5">
+                Select Excel File *
+              </label>
+              <div className="relative border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-xl p-6 text-center transition bg-slate-50/50 hover:bg-emerald-50/20 group">
+                <input
+                  type="file"
+                  accept=".xlsx, .xls, .csv"
+                  onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+                <div className="space-y-2">
+                  <UploadCloud className="w-8 h-8 text-slate-400 group-hover:text-emerald-600 mx-auto transition" />
+                  {selectedFile ? (
+                    <div>
+                      <p className="text-xs font-bold text-emerald-700">{selectedFile.name}</p>
+                      <p className="text-[10px] text-slate-400 font-medium">
+                        {(selectedFile.size / 1024).toFixed(1)} KB — Click to change file
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-xs font-semibold text-slate-700">
+                        Click or drag &amp; drop Excel file here
+                      </p>
+                      <p className="text-[10px] text-slate-400 font-medium">Supports .xlsx, .xls, .csv</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsExcelModalOpen(false);
+                  setSelectedFile(null);
+                }}
+                className="h-9 text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={uploadingExcel || !selectedFile}
+                className="h-9 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+              >
+                {uploadingExcel ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Uploading &amp; Importing...
+                  </>
+                ) : (
+                  <>
+                    <UploadCloud className="w-3.5 h-3.5 mr-1.5" /> Upload &amp; Import Data
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
