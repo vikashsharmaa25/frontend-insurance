@@ -173,8 +173,38 @@ export const createFamilyTypeApi = (data: {
 };
 
 // ----------------------------------------------------
-// 🔗 8. Plan Option Coverage Matrix Module
+// 🔗 8. Plan Coverage Matrix Module (Plan-level, per sum-insured slab)
 // ----------------------------------------------------
+export const getPlanCoveragesApi = (planId: string, sumInsuredId?: string) => {
+  const query = sumInsuredId
+    ? `planId=${planId}&sumInsuredId=${sumInsuredId}`
+    : `planId=${planId}`;
+  return api.get(`/api/admin/plan-coverages?${query}`);
+};
+
+export const savePlanCoverageApi = (data: {
+  planId: string;
+  coverageId: string;
+  sumInsuredId?: string | null;
+  isCovered: boolean;
+  value: string;
+}) => {
+  return api.post("/api/admin/plan-coverages", data);
+};
+
+export const savePlanCoverageBatchApi = (data: {
+  planId: string;
+  coverages: Array<{
+    coverageId: string;
+    sumInsuredId?: string | null;
+    isCovered: boolean;
+    value: string;
+  }>;
+}) => {
+  return api.post("/api/admin/plan-coverages/batch", data);
+};
+
+// (Legacy) Plan Option Coverage Matrix - kept for backward compatibility
 export const getPlanOptionCoveragesApi = (planId: string, optionId: string) => {
   return api.get(`/api/admin/plan-option-coverages?planId=${planId}&optionId=${optionId}`);
 };
