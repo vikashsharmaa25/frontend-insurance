@@ -17,9 +17,9 @@ import { Badge } from "@/components/ui/badge";
 
 const pageTitles: Record<string, string> = {
   "/admin/dashboard": "Executive Dashboard",
-  "/admin/plans": "Insurance Plans & Options",
+  "/admin/plans": "Insurance Plans",
   "/admin/masters": "Master Data Center",
-  "/admin/matrix": "Plan Option Coverage Matrix",
+  "/admin/matrix": "Plan Coverage Matrix",
   "/admin/tabulation": "Plan Tabulation & Policy Matrix",
   "/admin/policy-conditions": "Policy Terms & Sub-limits",
   "/admin/rate-cards": "Premium Rates & Bulk Excel",

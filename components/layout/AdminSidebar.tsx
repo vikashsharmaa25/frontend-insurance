@@ -36,7 +36,7 @@ const navItems: NavItem[] = [
     icon: LayoutDashboard,
   },
   {
-    title: "Plans & Options",
+    title: "Insurance Plans",
     href: "/admin/plans",
     icon: Layers,
     badge: "Core",

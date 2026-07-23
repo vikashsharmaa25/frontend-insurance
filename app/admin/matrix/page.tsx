@@ -260,10 +260,10 @@ export default function CoverageMatrixPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-              Plan Option Coverage Matrix <Sparkles className="w-4 h-4 text-orange-600" />
+              Plan Coverage Matrix <Sparkles className="w-4 h-4 text-orange-600" />
             </h2>
             <p className="text-xs text-slate-500">
-              Map individual coverages to plan variants and define custom coverage limits.
+              Map individual coverages to each plan and define custom coverage limits.
             </p>
           </div>
           {selectedOptionId && (
@@ -307,7 +307,7 @@ export default function CoverageMatrixPage() {
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-              <Settings className="w-4 h-4 text-amber-600" /> Select Plan Option / Variant
+              <Settings className="w-4 h-4 text-amber-600" /> Select Sum Insured
             </label>
             <select
               value={selectedOptionId}
@@ -334,7 +334,7 @@ export default function CoverageMatrixPage() {
             <Grid2X2 className="w-10 h-10 text-slate-400 mx-auto" />
             <p className="text-sm font-bold text-slate-700">No Option Selected</p>
             <p className="text-xs text-slate-500">
-              Select an Insurance Plan and an Option variant above to view and configure its coverage matrix.
+              Select an Insurance Plan and a Sum Insured above to view and configure its coverage matrix.
             </p>
           </div>
         ) : (
