@@ -242,7 +242,6 @@ export const getPremiumRatesApi = (params?: GetPremiumRatesParams) => {
 
 export const createPremiumRateApi = (data: {
   planId: string;
-  optionId: string;
   sumInsuredId: string;
   ageSlabId: string;
   familyTypeId: string;

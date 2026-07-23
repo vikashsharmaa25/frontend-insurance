@@ -219,11 +219,10 @@ export default function ApplicationsPage() {
                 setStatusFilter("all");
                 setPage(1);
               }}
-              className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition ${
-                statusFilter === "all"
+              className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition ${statusFilter === "all"
                   ? "bg-orange-600 text-white shadow-xs"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
+                }`}
             >
               All
             </button>
@@ -232,11 +231,10 @@ export default function ApplicationsPage() {
                 setStatusFilter("PENDING_APPROVAL");
                 setPage(1);
               }}
-              className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition ${
-                statusFilter === "PENDING_APPROVAL"
+              className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition ${statusFilter === "PENDING_APPROVAL"
                   ? "bg-amber-100 text-amber-800 border border-amber-200"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
+                }`}
             >
               Pending Approval
             </button>
@@ -245,11 +243,10 @@ export default function ApplicationsPage() {
                 setStatusFilter("APPROVED");
                 setPage(1);
               }}
-              className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition ${
-                statusFilter === "APPROVED"
+              className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition ${statusFilter === "APPROVED"
                   ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
+                }`}
             >
               Approved
             </button>
@@ -258,11 +255,10 @@ export default function ApplicationsPage() {
                 setStatusFilter("REJECTED");
                 setPage(1);
               }}
-              className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition ${
-                statusFilter === "REJECTED"
+              className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition ${statusFilter === "REJECTED"
                   ? "bg-red-100 text-red-800 border border-red-200"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
+                }`}
             >
               Rejected
             </button>
