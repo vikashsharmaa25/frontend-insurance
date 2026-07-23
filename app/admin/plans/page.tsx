@@ -9,6 +9,7 @@ import {
   updatePlanApi,
   deletePlanApi,
   togglePlanStatusApi,
+  getSumInsuredApi,
 } from "@/lib/apiService";
 import { toast } from "sonner";
 import {
@@ -44,6 +45,22 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+const generateSlug = (text: string) => {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^\w\-]+/g, "")
+    .replace(/\-\-+/g, "-");
+};
+
+interface SumInsuredSlabItem {
+  _id: string;
+  displayName: string;
+  amount: number;
+}
+
 interface Plan {
   _id: string;
   name: string;
@@ -52,6 +69,8 @@ interface Plan {
   description?: string;
   logo?: string;
   status: "active" | "inactive" | string;
+  slabs?: Array<SumInsuredSlabItem | string>;
+  sumInsuredSlabs?: Array<SumInsuredSlabItem | string>;
   createdAt?: string;
 }
 
@@ -64,16 +83,26 @@ export default function PlansPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
 
+  // Available master sum insured slabs for selection
+  const [availableSumInsuredSlabs, setAvailableSumInsuredSlabs] = useState<SumInsuredSlabItem[]>([]);
+
   // Plan Form Modal state
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
-  const [planForm, setPlanForm] = useState({
+  const [planForm, setPlanForm] = useState<{
+    name: string;
+    slug: string;
+    shortDescription: string;
+    description: string;
+    status: string;
+    slabs: string[];
+  }>({
     name: "",
     slug: "",
     shortDescription: "",
     description: "",
-    logo: "",
     status: "active",
+    slabs: [],
   });
   const [submittingPlan, setSubmittingPlan] = useState(false);
 
@@ -106,16 +135,32 @@ export default function PlansPage() {
     fetchPlans();
   }, [fetchPlans]);
 
+  // Fetch available sum insured slabs master data
+  useEffect(() => {
+    const fetchSlabs = async () => {
+      try {
+        const res = await getSumInsuredApi();
+        const list = res.data?.data || res.data || [];
+        setAvailableSumInsuredSlabs(list);
+      } catch (err) {
+        console.error("Fetch sum insured slabs error:", err);
+      }
+    };
+    fetchSlabs();
+  }, []);
+
   const handleOpenPlanModal = (plan?: Plan) => {
     if (plan) {
       setEditingPlan(plan);
+      const rawSlabs = plan.slabs || plan.sumInsuredSlabs || [];
+      const extractedSlabIds = rawSlabs.map((s) => (typeof s === "string" ? s : s._id));
       setPlanForm({
         name: plan.name || "",
         slug: plan.slug || "",
         shortDescription: plan.shortDescription || "",
         description: plan.description || "",
-        logo: plan.logo || "",
         status: plan.status || "active",
+        slabs: extractedSlabIds,
       });
     } else {
       setEditingPlan(null);
@@ -124,8 +169,8 @@ export default function PlansPage() {
         slug: "",
         shortDescription: "",
         description: "",
-        logo: "",
         status: "active",
+        slabs: [],
       });
     }
     setIsPlanModalOpen(true);
@@ -237,7 +282,6 @@ export default function PlansPage() {
           <Table>
             <TableHeader className="bg-slate-50">
               <TableRow className="border-b border-slate-200">
-                <TableHead className="w-16 px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Logo</TableHead>
                 <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Plan Details</TableHead>
                 <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Short Description</TableHead>
                 <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</TableHead>
@@ -247,14 +291,14 @@ export default function PlansPage() {
             <TableBody className="divide-y divide-slate-100">
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="px-6 py-12 text-center text-slate-400">
+                  <TableCell colSpan={4} className="px-6 py-12 text-center text-slate-400">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto text-orange-600 mb-2" />
                     Fetching insurance plans...
                   </TableCell>
                 </TableRow>
               ) : plans.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="px-6 py-12 text-center text-slate-400 text-sm">
+                  <TableCell colSpan={4} className="px-6 py-12 text-center text-slate-400 text-sm">
                     No insurance plans found. Click &quot;Create New Plan&quot; to get started.
                   </TableCell>
                 </TableRow>
@@ -262,25 +306,23 @@ export default function PlansPage() {
                 plans.map((plan) => (
                   <TableRow key={plan._id} className="hover:bg-slate-50 transition">
                     <TableCell className="px-6 py-4">
-                      <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden">
-                        {plan.logo ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={plan.logo}
-                            alt={plan.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLElement).style.display = "none";
-                            }}
-                          />
-                        ) : (
-                          <ImageIcon className="w-4 h-4 text-slate-400" />
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-6 py-4">
                       <div className="font-bold text-slate-900">{plan.name}</div>
-                      <div className="text-xs font-mono text-orange-600">{plan.slug}</div>
+                      <div className="text-xs font-mono text-orange-600 mb-1">{plan.slug}</div>
+                      {((plan.slabs && plan.slabs.length > 0) || (plan.sumInsuredSlabs && plan.sumInsuredSlabs.length > 0)) && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {(plan.slabs || plan.sumInsuredSlabs || []).map((slabItem: any, idx: number) => {
+                            const name = typeof slabItem === "object" ? (slabItem.displayName || `₹${slabItem.amount}`) : slabItem;
+                            return (
+                              <span
+                                key={idx}
+                                className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 rounded"
+                              >
+                                {name}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell className="px-6 py-4 text-xs text-slate-500 max-w-xs truncate">
                       {plan.shortDescription || "No short description provided."}
@@ -402,21 +444,31 @@ export default function PlansPage() {
                 required
                 placeholder="e.g. Health Shield"
                 value={planForm.name}
-                onChange={(e) => setPlanForm({ ...planForm, name: e.target.value })}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setPlanForm({
+                    ...planForm,
+                    name: val,
+                    slug: generateSlug(val),
+                  });
+                }}
                 className="bg-slate-50 border-slate-200 text-slate-900 text-xs focus-visible:ring-orange-500 font-medium"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">
-                Slug (URL Identifier) *
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+                  Slug (URL Identifier) *
+                </label>
+                <span className="text-[10px] text-slate-400 font-medium">Auto-generated</span>
+              </div>
               <Input
                 type="text"
                 required
                 placeholder="health-shield"
                 value={planForm.slug}
-                onChange={(e) => setPlanForm({ ...planForm, slug: e.target.value })}
+                onChange={(e) => setPlanForm({ ...planForm, slug: generateSlug(e.target.value) })}
                 className="bg-slate-50 border-slate-200 text-slate-900 text-xs font-mono focus-visible:ring-orange-500"
               />
             </div>
@@ -436,15 +488,55 @@ export default function PlansPage() {
 
             <div>
               <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1">
-                Logo URL
+                Assign Sum Insured Slabs (Select Slabs)
               </label>
-              <Input
-                type="text"
-                placeholder="https://cdn.example.com/logo.png"
-                value={planForm.logo}
-                onChange={(e) => setPlanForm({ ...planForm, logo: e.target.value })}
-                className="bg-slate-50 border-slate-200 text-slate-900 text-xs focus-visible:ring-orange-500"
-              />
+              <p className="text-[11px] text-slate-400 mb-1.5">
+                Hold Ctrl (Windows) or Cmd (Mac) to select multiple insured slabs:
+              </p>
+              <select
+                multiple
+                value={planForm.slabs}
+                onChange={(e) => {
+                  const selectedOptions = Array.from(e.target.selectedOptions, (option) => option.value);
+                  setPlanForm({ ...planForm, slabs: selectedOptions });
+                }}
+                className="w-full h-28 px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-orange-500 font-medium cursor-pointer"
+              >
+                {availableSumInsuredSlabs.map((slab) => (
+                  <option key={slab._id} value={slab._id} className="py-1 px-1">
+                    {slab.displayName ? slab.displayName : `₹${slab.amount}`}
+                  </option>
+                ))}
+              </select>
+
+              {/* Selected Badges */}
+              {planForm.slabs.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {planForm.slabs.map((slabId) => {
+                    const slabObj = availableSumInsuredSlabs.find((s) => s._id === slabId);
+                    return (
+                      <span
+                        key={slabId}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold bg-orange-100 text-orange-800 rounded-md border border-orange-200"
+                      >
+                        {slabObj ? slabObj.displayName || `₹${slabObj.amount}` : slabId}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setPlanForm({
+                              ...planForm,
+                              slabs: planForm.slabs.filter((id) => id !== slabId),
+                            })
+                          }
+                          className="hover:text-red-600 font-black ml-0.5"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <div>

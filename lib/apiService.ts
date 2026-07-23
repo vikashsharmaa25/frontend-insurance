@@ -57,6 +57,9 @@ export const createPlanApi = (data: {
   description?: string;
   logo?: string;
   status?: string;
+  slabs?: string[];
+  ageSlabs?: string[];
+  sumInsuredSlabs?: string[];
 }) => {
   return api.post("/api/admin/plans", data);
 };
@@ -68,6 +71,9 @@ export const updatePlanApi = (id: string, data: Partial<{
   description: string;
   logo: string;
   status: string;
+  slabs: string[];
+  ageSlabs: string[];
+  sumInsuredSlabs: string[];
 }>) => {
   return api.put(`/api/admin/plans/${id}`, data);
 };
