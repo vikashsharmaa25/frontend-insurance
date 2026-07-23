@@ -124,6 +124,19 @@ export const createCoverageApi = (data: {
   return api.post("/api/admin/coverages", data);
 };
 
+export const updateCoverageApi = (id: string, data: Partial<{
+  title: string;
+  description: string;
+  icon: string;
+  status: string;
+}>) => {
+  return api.put(`/api/admin/coverages/${id}`, data);
+};
+
+export const deleteCoverageApi = (id: string) => {
+  return api.delete(`/api/admin/coverages/${id}`);
+};
+
 // ----------------------------------------------------
 // 💰 5. Sum Insured Master Module
 // ----------------------------------------------------
@@ -137,6 +150,18 @@ export const createSumInsuredApi = (data: {
   status?: string;
 }) => {
   return api.post("/api/admin/sum-insured", data);
+};
+
+export const updateSumInsuredApi = (id: string, data: Partial<{
+  amount: number;
+  displayName: string;
+  status: string;
+}>) => {
+  return api.put(`/api/admin/sum-insured/${id}`, data);
+};
+
+export const deleteSumInsuredApi = (id: string) => {
+  return api.delete(`/api/admin/sum-insured/${id}`);
 };
 
 // ----------------------------------------------------
@@ -155,6 +180,19 @@ export const createAgeSlabApi = (data: {
   return api.post("/api/admin/age-slabs", data);
 };
 
+export const updateAgeSlabApi = (id: string, data: Partial<{
+  minAge: number;
+  maxAge: number;
+  displayName: string;
+  status: string;
+}>) => {
+  return api.put(`/api/admin/age-slabs/${id}`, data);
+};
+
+export const deleteAgeSlabApi = (id: string) => {
+  return api.delete(`/api/admin/age-slabs/${id}`);
+};
+
 // ----------------------------------------------------
 // 👨‍👩‍👧 7. Family Type Master Module
 // ----------------------------------------------------
@@ -170,6 +208,20 @@ export const createFamilyTypeApi = (data: {
   status?: string;
 }) => {
   return api.post("/api/admin/family-types", data);
+};
+
+export const updateFamilyTypeApi = (id: string, data: Partial<{
+  name: string;
+  code: string;
+  adultCount: number;
+  childCount: number;
+  status: string;
+}>) => {
+  return api.put(`/api/admin/family-types/${id}`, data);
+};
+
+export const deleteFamilyTypeApi = (id: string) => {
+  return api.delete(`/api/admin/family-types/${id}`);
 };
 
 // ----------------------------------------------------

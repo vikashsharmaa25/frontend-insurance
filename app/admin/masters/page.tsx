@@ -5,12 +5,20 @@ import { AdminLayout } from "@/components/layout/AdminLayout";
 import {
   getCoveragesApi,
   createCoverageApi,
+  updateCoverageApi,
+  deleteCoverageApi,
   getSumInsuredApi,
   createSumInsuredApi,
+  updateSumInsuredApi,
+  deleteSumInsuredApi,
   getAgeSlabsApi,
   createAgeSlabApi,
+  updateAgeSlabApi,
+  deleteAgeSlabApi,
   getFamilyTypesApi,
   createFamilyTypeApi,
+  updateFamilyTypeApi,
+  deleteFamilyTypeApi,
 } from "@/lib/apiService";
 import { toast } from "sonner";
 import {
@@ -23,6 +31,9 @@ import {
   Loader2,
   Sparkles,
   CheckCircle,
+  Pencil,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,6 +68,12 @@ export default function MasterDataPage() {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [editingItem, setEditingItem] = useState<any | null>(null);
+
+  // Delete Confirmation Modal State
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingItem, setDeletingItem] = useState<any | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Form states
   const [coverageForm, setCoverageForm] = useState({ title: "", description: "", icon: "shield", status: "active" });
@@ -95,30 +112,124 @@ export default function MasterDataPage() {
     setSearch("");
   }, [fetchMasterData]);
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const openCreateModal = () => {
+    setEditingItem(null);
+    setCoverageForm({ title: "", description: "", icon: "shield", status: "active" });
+    setSumInsuredForm({ amount: 500000, displayName: "5 Lakhs", status: "active" });
+    setAgeSlabForm({ minAge: 18, maxAge: 25, displayName: "18-25 Years", status: "active" });
+    setFamilyTypeForm({ name: "1 Adult + 1 Kid", code: "1A+1K", adultCount: 1, childCount: 1, status: "active" });
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (item: any) => {
+    setEditingItem(item);
+    if (activeTab === "coverages") {
+      setCoverageForm({
+        title: item.title || "",
+        description: item.description || "",
+        icon: item.icon || "shield",
+        status: item.status || "active",
+      });
+    } else if (activeTab === "sum-insured") {
+      setSumInsuredForm({
+        amount: item.amount || 0,
+        displayName: item.displayName || "",
+        status: item.status || "active",
+      });
+    } else if (activeTab === "age-slabs") {
+      setAgeSlabForm({
+        minAge: item.minAge || 0,
+        maxAge: item.maxAge || 0,
+        displayName: item.displayName || "",
+        status: item.status || "active",
+      });
+    } else if (activeTab === "family-types") {
+      setFamilyTypeForm({
+        name: item.name || "",
+        code: item.code || "",
+        adultCount: item.adultCount || 0,
+        childCount: item.childCount || 0,
+        status: item.status || "active",
+      });
+    }
+    setIsModalOpen(true);
+  };
+
+  const openDeleteModal = (item: any) => {
+    setDeletingItem(item);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setSubmitting(true);
-      if (activeTab === "coverages") {
-        await createCoverageApi(coverageForm);
-        toast.success("Coverage item created!");
-      } else if (activeTab === "sum-insured") {
-        await createSumInsuredApi(sumInsuredForm);
-        toast.success("Sum Insured slab created!");
-      } else if (activeTab === "age-slabs") {
-        await createAgeSlabApi(ageSlabForm);
-        toast.success("Age slab created!");
-      } else if (activeTab === "family-types") {
-        await createFamilyTypeApi(familyTypeForm);
-        toast.success("Family composition type created!");
+      if (editingItem) {
+        // UPDATE MODE
+        if (activeTab === "coverages") {
+          await updateCoverageApi(editingItem._id, coverageForm);
+          toast.success("Coverage item updated!");
+        } else if (activeTab === "sum-insured") {
+          await updateSumInsuredApi(editingItem._id, sumInsuredForm);
+          toast.success("Sum Insured slab updated!");
+        } else if (activeTab === "age-slabs") {
+          await updateAgeSlabApi(editingItem._id, ageSlabForm);
+          toast.success("Age slab updated!");
+        } else if (activeTab === "family-types") {
+          await updateFamilyTypeApi(editingItem._id, familyTypeForm);
+          toast.success("Family type updated!");
+        }
+      } else {
+        // CREATE MODE
+        if (activeTab === "coverages") {
+          await createCoverageApi(coverageForm);
+          toast.success("Coverage item created!");
+        } else if (activeTab === "sum-insured") {
+          await createSumInsuredApi(sumInsuredForm);
+          toast.success("Sum Insured slab created!");
+        } else if (activeTab === "age-slabs") {
+          await createAgeSlabApi(ageSlabForm);
+          toast.success("Age slab created!");
+        } else if (activeTab === "family-types") {
+          await createFamilyTypeApi(familyTypeForm);
+          toast.success("Family composition type created!");
+        }
       }
       setIsModalOpen(false);
       fetchMasterData();
     } catch (err: any) {
-      console.error("Create master error:", err);
-      toast.error(err.response?.data?.message || "Failed to create master entry");
+      console.error("Submit master error:", err);
+      toast.error(err.response?.data?.message || `Failed to ${editingItem ? "update" : "create"} master entry`);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deletingItem) return;
+    try {
+      setDeleting(true);
+      if (activeTab === "coverages") {
+        await deleteCoverageApi(deletingItem._id);
+        toast.success("Coverage item deleted successfully!");
+      } else if (activeTab === "sum-insured") {
+        await deleteSumInsuredApi(deletingItem._id);
+        toast.success("Sum Insured slab deleted successfully!");
+      } else if (activeTab === "age-slabs") {
+        await deleteAgeSlabApi(deletingItem._id);
+        toast.success("Age slab deleted successfully!");
+      } else if (activeTab === "family-types") {
+        await deleteFamilyTypeApi(deletingItem._id);
+        toast.success("Family type deleted successfully!");
+      }
+      setIsDeleteModalOpen(false);
+      setDeletingItem(null);
+      fetchMasterData();
+    } catch (err: any) {
+      console.error("Delete master error:", err);
+      toast.error(err.response?.data?.message || "Failed to delete master entry");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -143,7 +254,7 @@ export default function MasterDataPage() {
             </p>
           </div>
           <Button
-            onClick={() => setIsModalOpen(true)}
+            onClick={openCreateModal}
             className="bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl shadow-md shadow-orange-600/20 text-xs sm:text-sm h-10"
           >
             <Plus className="w-4 h-4 mr-1.5" /> Add New Master Item
@@ -211,6 +322,7 @@ export default function MasterDataPage() {
                   <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Description</TableHead>
                   <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Icon Token</TableHead>
                   <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</TableHead>
+                  <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</TableHead>
                 </TableRow>
               )}
               {activeTab === "sum-insured" && (
@@ -218,6 +330,7 @@ export default function MasterDataPage() {
                   <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Display Name</TableHead>
                   <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Amount (₹)</TableHead>
                   <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</TableHead>
+                  <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</TableHead>
                 </TableRow>
               )}
               {activeTab === "age-slabs" && (
@@ -225,6 +338,7 @@ export default function MasterDataPage() {
                   <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Bracket Name</TableHead>
                   <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Age Range</TableHead>
                   <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</TableHead>
+                  <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</TableHead>
                 </TableRow>
               )}
               {activeTab === "family-types" && (
@@ -233,6 +347,7 @@ export default function MasterDataPage() {
                   <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Code</TableHead>
                   <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Adults / Kids</TableHead>
                   <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</TableHead>
+                  <TableHead className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</TableHead>
                 </TableRow>
               )}
             </TableHeader>
@@ -240,14 +355,14 @@ export default function MasterDataPage() {
             <TableBody className="divide-y divide-slate-100">
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="px-6 py-12 text-center text-slate-400">
+                  <TableCell colSpan={5} className="px-6 py-12 text-center text-slate-400">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto text-orange-600 mb-2" />
                     Loading master records...
                   </TableCell>
                 </TableRow>
               ) : filteredItems.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="px-6 py-12 text-center text-slate-400 text-sm">
+                  <TableCell colSpan={5} className="px-6 py-12 text-center text-slate-400 text-sm">
                     No records found for &quot;{activeTab}&quot;. Click &quot;Add New Master Item&quot; to create one.
                   </TableCell>
                 </TableRow>
@@ -260,7 +375,13 @@ export default function MasterDataPage() {
                         <TableCell className="px-6 py-4 text-xs text-slate-500 max-w-sm truncate">{item.description}</TableCell>
                         <TableCell className="px-6 py-4 font-mono text-xs text-orange-600 font-bold">{item.icon || "hospital"}</TableCell>
                         <TableCell className="px-6 py-4">
-                          <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50">
+                          <Badge
+                            className={
+                              item.status === "inactive"
+                                ? "bg-slate-100 text-slate-600 border-slate-200"
+                                : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                            }
+                          >
                             <CheckCircle className="w-3 h-3 mr-1 text-emerald-600" /> {item.status || "active"}
                           </Badge>
                         </TableCell>
@@ -274,7 +395,13 @@ export default function MasterDataPage() {
                           ₹{Number(item.amount).toLocaleString()}
                         </TableCell>
                         <TableCell className="px-6 py-4">
-                          <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50">
+                          <Badge
+                            className={
+                              item.status === "inactive"
+                                ? "bg-slate-100 text-slate-600 border-slate-200"
+                                : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                            }
+                          >
                             <CheckCircle className="w-3 h-3 mr-1 text-emerald-600" /> {item.status || "active"}
                           </Badge>
                         </TableCell>
@@ -288,7 +415,13 @@ export default function MasterDataPage() {
                           {item.minAge} - {item.maxAge} Years
                         </TableCell>
                         <TableCell className="px-6 py-4">
-                          <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50">
+                          <Badge
+                            className={
+                              item.status === "inactive"
+                                ? "bg-slate-100 text-slate-600 border-slate-200"
+                                : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                            }
+                          >
                             <CheckCircle className="w-3 h-3 mr-1 text-emerald-600" /> {item.status || "active"}
                           </Badge>
                         </TableCell>
@@ -303,12 +436,40 @@ export default function MasterDataPage() {
                           {item.adultCount} Adult(s), {item.childCount} Kid(s)
                         </TableCell>
                         <TableCell className="px-6 py-4">
-                          <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50">
+                          <Badge
+                            className={
+                              item.status === "inactive"
+                                ? "bg-slate-100 text-slate-600 border-slate-200"
+                                : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                            }
+                          >
                             <CheckCircle className="w-3 h-3 mr-1 text-emerald-600" /> {item.status || "active"}
                           </Badge>
                         </TableCell>
                       </>
                     )}
+
+                    {/* Actions Column */}
+                    <TableCell className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openEditModal(item)}
+                          className="h-8 px-2.5 text-xs text-slate-700 hover:text-orange-600 hover:border-orange-200 bg-white"
+                        >
+                          <Pencil className="w-3.5 h-3.5 mr-1" /> Edit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openDeleteModal(item)}
+                          className="h-8 px-2.5 text-xs text-rose-600 border-rose-200 hover:bg-rose-50 hover:border-rose-300 bg-white"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -317,19 +478,19 @@ export default function MasterDataPage() {
         </div>
       </div>
 
-      {/* Create Dialog (shadcn Dialog) */}
+      {/* Create / Edit Dialog (shadcn Dialog) */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-md bg-white border-slate-200 text-slate-900 rounded-2xl p-6">
           <DialogHeader className="border-b border-slate-200 pb-3">
             <DialogTitle className="text-lg font-bold text-slate-900">
-              Add {activeTab.replace("-", " ").toUpperCase()} Item
+              {editingItem ? "Edit" : "Add"} {activeTab.replace("-", " ").toUpperCase()} Item
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-500">
-              Create a new master data entry for ICICI insurance system configuration.
+              {editingItem ? "Update existing" : "Create a new"} master data entry for ICICI insurance system configuration.
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleCreate} className="space-y-4 pt-2">
+          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
             {activeTab === "coverages" && (
               <>
                 <div>
@@ -369,6 +530,19 @@ export default function MasterDataPage() {
                     className="bg-slate-50 border-slate-200 text-orange-600 font-mono font-bold focus-visible:ring-orange-500"
                   />
                 </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider block mb-1">
+                    Status
+                  </label>
+                  <select
+                    value={coverageForm.status}
+                    onChange={(e) => setCoverageForm({ ...coverageForm, status: e.target.value })}
+                    className="w-full h-10 px-3 rounded-md bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
               </>
             )}
 
@@ -404,6 +578,19 @@ export default function MasterDataPage() {
                     onChange={(e) => setSumInsuredForm({ ...sumInsuredForm, displayName: e.target.value })}
                     className="bg-slate-50 border-slate-200 text-slate-900 focus-visible:ring-orange-500"
                   />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider block mb-1">
+                    Status
+                  </label>
+                  <select
+                    value={sumInsuredForm.status}
+                    onChange={(e) => setSumInsuredForm({ ...sumInsuredForm, status: e.target.value })}
+                    className="w-full h-10 px-3 rounded-md bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
                 </div>
               </>
             )}
@@ -462,6 +649,19 @@ export default function MasterDataPage() {
                     className="bg-slate-50 border-slate-200 text-slate-900 focus-visible:ring-orange-500"
                   />
                 </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider block mb-1">
+                    Status
+                  </label>
+                  <select
+                    value={ageSlabForm.status}
+                    onChange={(e) => setAgeSlabForm({ ...ageSlabForm, status: e.target.value })}
+                    className="w-full h-10 px-3 rounded-md bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
               </>
             )}
 
@@ -517,6 +717,19 @@ export default function MasterDataPage() {
                     />
                   </div>
                 </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider block mb-1">
+                    Status
+                  </label>
+                  <select
+                    value={familyTypeForm.status}
+                    onChange={(e) => setFamilyTypeForm({ ...familyTypeForm, status: e.target.value })}
+                    className="w-full h-10 px-3 rounded-md bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
               </>
             )}
 
@@ -534,10 +747,54 @@ export default function MasterDataPage() {
                 disabled={submitting}
                 className="bg-orange-600 hover:bg-orange-700 text-white font-bold"
               >
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Master Record"}
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : editingItem ? "Update Master Record" : "Save Master Record"}
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+        <DialogContent className="sm:max-w-md bg-white border-slate-200 text-slate-900 rounded-2xl p-6">
+          <DialogHeader className="border-b border-slate-200 pb-3">
+            <DialogTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-rose-600" /> Confirm Delete
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500">
+              Are you sure you want to delete this master record? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          {deletingItem && (
+            <div className="p-3 my-2 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1">
+              <div className="font-bold text-slate-800">
+                {deletingItem.title || deletingItem.displayName || deletingItem.name}
+              </div>
+              {deletingItem.description && <div className="text-slate-500">{deletingItem.description}</div>}
+              {deletingItem.amount && <div className="text-orange-600 font-mono font-bold">₹{Number(deletingItem.amount).toLocaleString()}</div>}
+              {deletingItem.code && <div className="text-orange-600 font-mono font-bold">Code: {deletingItem.code}</div>}
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsDeleteModalOpen(false)}
+              className="border-slate-200 bg-white text-slate-600"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-rose-600 hover:bg-rose-700 text-white font-bold"
+            >
+              {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Delete Record"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </AdminLayout>
