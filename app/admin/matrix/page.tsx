@@ -58,7 +58,7 @@ interface MatrixItem {
   _id?: string;
 }
 
-export default function CoverageMatrixPage() {
+function CoverageMatrixInner() {
   const searchParams = useSearchParams();
   const paramPlanId = searchParams.get("planId");
 
@@ -442,5 +442,13 @@ export default function CoverageMatrixPage() {
         )}
       </div>
     </AdminLayout>
+  );
+}
+
+export default function CoverageMatrixPage() {
+  return (
+    <Suspense fallback={null}>
+      <CoverageMatrixInner />
+    </Suspense>
   );
 }
