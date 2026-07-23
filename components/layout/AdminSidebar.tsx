@@ -58,11 +58,6 @@ const navItems: NavItem[] = [
     badge: "Matrix",
   },
   {
-    title: "Policy Terms",
-    href: "/admin/policy-conditions",
-    icon: FileText,
-  },
-  {
     title: "Rate Cards & Excel",
     href: "/admin/rate-cards",
     icon: BadgePercent,

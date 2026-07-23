@@ -21,7 +21,6 @@ const pageTitles: Record<string, string> = {
   "/admin/masters": "Master Data Center",
   "/admin/matrix": "Plan Coverage Matrix",
   "/admin/tabulation": "Plan Tabulation & Policy Matrix",
-  "/admin/policy-conditions": "Policy Terms & Sub-limits",
   "/admin/rate-cards": "Premium Rates & Bulk Excel",
   "/admin/applications": "Customer Applications Review",
 };

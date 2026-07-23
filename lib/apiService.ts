@@ -284,28 +284,6 @@ export const savePlanOptionCoverageBatchApi = (data: {
 };
 
 // ----------------------------------------------------
-// 📄 9. Policy Conditions & Sub-limits Module
-// ----------------------------------------------------
-export const savePolicyConditionsApi = (data: {
-  planId: string;
-  roomRentLimit?: string;
-  ambulanceCoverLimit?: number;
-  maternityLimit?: number;
-  coPayPercentage?: number;
-  initialWaitingPeriodDays?: number;
-  specificIllnessWaitingDays?: number;
-  preExistingDiseaseWaitingMonths?: number;
-  diseaseSubLimits?: Array<{ diseaseName: string; limitAmount: number }>;
-  exclusions?: string[];
-}) => {
-  return api.post("/api/admin/policy-conditions", data);
-};
-
-export const seedPolicyConditionsApi = () => {
-  return api.post("/api/admin/policy-conditions/seed");
-};
-
-// ----------------------------------------------------
 // 📊 10. Premium Rate Matrix & Bulk Excel Upload Module
 // ----------------------------------------------------
 export interface GetPremiumRatesParams {
