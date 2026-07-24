@@ -495,21 +495,55 @@ export default function ApplicationsPage() {
                 </div>
               </div>
 
+              {/* Section 2.5: Master Member Details */}
+              {auditData.masterMember && (
+                <div className="space-y-2">
+                  <h4 className="font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 text-xs">
+                    <Sparkles className="w-4 h-4 text-amber-600" /> Master / Primary Member Details
+                  </h4>
+                  <div className="p-4 rounded-xl bg-amber-50/60 border border-amber-200/80 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div>
+                      <span className="text-amber-800 text-[11px] block font-medium">Master Name</span>
+                      <span className="font-bold text-slate-900">{auditData.masterMember.name || "N/A"}</span>
+                    </div>
+                    <div>
+                      <span className="text-amber-800 text-[11px] block font-medium">Calculated Age</span>
+                      <span className="font-bold text-slate-900">{auditData.masterMember.age ? `${auditData.masterMember.age} Yrs` : "N/A"}</span>
+                    </div>
+                    <div>
+                      <span className="text-amber-800 text-[11px] block font-medium">Relation</span>
+                      <span className="font-bold text-slate-900">{auditData.masterMember.relation || "Self"}</span>
+                    </div>
+                    <div>
+                      <span className="text-amber-800 text-[11px] block font-medium">Aadhaar Card</span>
+                      <span className="font-mono font-bold text-slate-900">{auditData.masterMember.aadhaar || "N/A"}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Section 3: Insured Members */}
               {auditData.insuredMembers && auditData.insuredMembers.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 text-xs">
-                    <HeartPulse className="w-4 h-4 text-amber-600" /> Insured Family Members
+                    <HeartPulse className="w-4 h-4 text-amber-600" /> Insured Family Members ({auditData.insuredMembers.length})
                   </h4>
                   <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
                     {auditData.insuredMembers.map((m: any, idx: number) => (
-                      <div key={idx} className="flex items-center justify-between text-xs py-1 border-b border-slate-200/60 last:border-0">
+                      <div key={idx} className="flex items-center justify-between text-xs py-1.5 border-b border-slate-200/60 last:border-0">
                         <div>
-                          <span className="font-bold text-slate-900">{m.firstName} {m.lastName}</span>
-                          <span className="text-slate-500 ml-2">({m.relationship || "Member"})</span>
+                          <span className="font-bold text-slate-900">
+                            {m.name || `${m.firstName || ''} ${m.lastName || ''}`.trim() || "Member"}
+                          </span>
+                          {m.isMaster && (
+                            <span className="ml-2 px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-bold text-[10px]">
+                              ⭐ MASTER
+                            </span>
+                          )}
+                          <span className="text-slate-500 ml-2">({m.relation || m.relationship || "Member"})</span>
                         </div>
                         <div className="text-slate-600 font-medium">
-                          Age: {m.age || "N/A"} • Gender: {m.gender || "N/A"}
+                          Age: {m.age || "N/A"} • Gender: {m.gender || "N/A"} {m.aadhaar ? `• Aadhaar: ${m.aadhaar}` : ''}
                         </div>
                       </div>
                     ))}
